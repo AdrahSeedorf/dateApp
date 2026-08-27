@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
@@ -49,17 +50,17 @@ export function createAdminClient() {
     );
   }
 
-  return createServerClient(
+  // Deliberately NOT the @supabase/ssr helper. That one is built around a
+  // cookie-backed user session and will attach the signed-in user's token,
+  // which overrides the service role and breaks auth.admin.* calls.
+  // The plain client keeps the service key as the auth header.
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceRoleKey,
     {
-      cookies: {
-        getAll() {
-          return [];
-        },
-        setAll() {
-          // No session handling — this client is not tied to a user.
-        },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );
