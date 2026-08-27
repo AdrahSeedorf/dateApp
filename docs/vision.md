@@ -487,3 +487,97 @@ that trains people to disable notifications.
   between two people who are meant to be on the same side.
 - **Public or social features.** This is private data. Sharing should be
   an export the couple chooses, never a feed.
+
+---
+
+## Onboarding (designed 2026-08-27)
+
+Onboarding decides retention more than any feature does, and this app has a
+harder version of the problem than most: it's close to useless until two
+people are in it.
+
+### The two paths are deliberately asymmetric
+
+**Person A — starts it, alone, with an empty app:**
+
+1. Sign in (magic link, no password)
+2. Your name
+3. Where you are — needed for real place names
+4. **Generate a date, immediately** ← the moment that matters
+5. Invite your partner
+6. Preferences and access needs _(skippable)_
+7. Add three past memories _(skippable)_
+
+**Person B — invited, arriving to an app that already has something in it:**
+
+1. Open the link — signed straight in, no signup form
+2. Confirm your name
+3. Lands on what A already made, with a date idea waiting to be voted on
+4. Preferences and access needs _(skippable)_
+
+### Why this order
+
+**The invite ask comes after the value, not before.** Most apps ask
+immediately, while it's still "some app I just signed up for" — nobody
+wants to drag their partner into that. Ninety seconds later, with two real
+ideas for somewhere near them on screen, it becomes "look at this".
+
+**A has to be sold; B arrives already curious**, because someone they love
+sent them a link. So B's path is three steps and ends on something A made,
+with a decision waiting. B's first action in the app is a tap that affects
+A — the two-way loop starts on their first screen rather than weeks later.
+
+**Everything after step 4 is skippable.** Each additional question is a
+drop-off point, and none of them are needed for the app to work.
+
+### The failure mode to design against
+
+A invites B, B never joins, A sits in an empty room and leaves. This is
+what kills apps in this category. Two defences:
+
+- The app must be genuinely usable solo, so A can plan a surprise without
+  B ever knowing.
+- The nudge to B comes from the **app**, not from A having to chase them.
+  "Did you download that thing yet" is a conversation that burns goodwill.
+
+### Asking about access needs
+
+Phrase it as _"anything we should factor in?"_ with structured options —
+step-free access, seating, quiet spaces, low sensory load — never "do you
+have a disability?". State why it's being asked in one line. Private by
+default, with an explicit choice about sharing with a partner.
+
+Nobody should have to disclose a health condition to a new partner as a
+side effect of using a date app.
+
+### Deliberately left out
+
+- **No tour or carousel.** Nobody reads them, and they delay the moment
+  that actually sells the app.
+- **No password wall.** Magic link means nothing stands between arriving
+  and step 4.
+
+---
+
+## Work breakdown — onboarding (chunked 2026-08-27)
+
+Ordered by dependency. Each chunk should be independently shippable and
+verifiable rather than a big-bang branch.
+
+| # | Chunk | Notes |
+|---|-------|-------|
+| 1 | Profile and preference schema | `location`, `onboarded_at` on profiles; interests and access needs; migration + RLS |
+| 2 | Onboarding gate and routing | Incomplete profile redirects to the flow; resumable from any step |
+| 3 | Steps 2–3: name and location | Two small forms writing to `profiles` |
+| 4 | Step 4: generate a date in-flow | Reuses the existing generator; the value moment |
+| 5 | Step 5: in-app invite creation | Replaces hand-written SQL; real feature beyond onboarding |
+| 6 | Step 6: preferences and access needs | Structured fields, skippable, editable later |
+| 7 | Step 7: seed three past memories | Reuses the memory form; kills the empty app |
+| 8 | Person B path | Shorter flow, lands on A's content |
+| 9 | Partner-hasn't-joined nudge | Email reminder from the app, not from A |
+
+### After onboarding, roughly in order
+
+Date lifecycle and outcomes → ratings → categories → the next-day "how did
+it go?" nudge → on-this-day resurfacing → rituals and trivia → in-app
+sharing of plans.
