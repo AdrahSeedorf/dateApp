@@ -293,3 +293,197 @@ sharing of plans (small, high value, schema already supports it) →
 profile attributes feeding generation → self-serve signup and invites →
 generalising beyond couples, which is the largest change and the one
 carrying real trust-and-safety weight.
+
+---
+
+## Product thinking: what would make this worth keeping (2026-08-27)
+
+### The real problem is frequency, not features
+
+Date planning is episodic — weekly at best, often monthly. Apps with low
+natural frequency die regardless of quality. The question isn't "what else
+can it do", it's **why would someone open this on a Tuesday when they
+aren't planning anything?**
+
+The answer isn't the generator. Generating a date idea is a utility used
+rarely and roughly replaceable with a web search. Memories accumulate:
+the more there are, the more the app is worth and the less anyone would
+leave. **That's the moat, and it deserves the investment.**
+
+### Highest-leverage additions
+
+**Close the plan → memory loop.** The single most valuable thing here.
+There's a gap between "saved a plan" and "logged a memory" that most
+people will never cross unaided. A nudge a day later — _"you saved Bondi
+coastal walk for Saturday, how did it go?"_ — converts intention into
+memory at near-zero effort, and produces the content everything else
+feeds on.
+
+**On-this-day resurfacing.** Cheap, and the one thing that gives a reason
+to open the app with no task in mind.
+
+**Solve the cold start.** A new couple opens an empty app and feels
+nothing. Ask for three memories from _before_ they joined during
+onboarding. The app becomes theirs immediately rather than in six months.
+
+**Make it genuinely two-player.** If one person does the work it dies. But
+full chat is a big build competing with iMessage. Small interactions beat
+conversation: react to a memory, vote between the two generated options
+(a tap each is a better fit for that decision than a thread), get notified
+when the other person adds something.
+
+**Anticipation.** Half the pleasure of a date is looking forward to it.
+`scheduled_for` already exists; a shared countdown creates value before
+anything happens.
+
+### The sharpening question
+
+What is this app the **best** place for — not what can it contain?
+
+Couples already have WhatsApp, a photo library and a calendar. What none
+of those do is **connect intention to memory**: we planned this, we did
+it, here's what it became. That loop is the genuinely defensible thing.
+Sharpening toward it matters more than breadth — the journal, bucket list
+and world map in the V3 list would each dilute it.
+
+The accessibility idea deserves treating as strategy, not a feature.
+Nearly every date app assumes an able-bodied user. Being the best option
+for people with access needs is underserved, defensible, and worth doing
+regardless.
+
+### Honest risks
+
+**This category is a graveyard.** Between, Couple and others had real
+funding and mostly failed. Not a reason to stop — a reason to stay narrow.
+
+**Video storage doesn't scale for free.** Photos are cheap; video isn't.
+At any real user count, unlimited video is a per-user loss. That's an
+architecture decision to make early, not a pricing decision to make late.
+
+**The generator will feel same-y by the tenth use.** Needs suggestion
+history to avoid repeats, ratings so it learns, and weather/season
+awareness so it feels alive rather than a static prompt.
+
+---
+
+## Date lifecycle, rituals and play (agreed 2026-08-27)
+
+### A date has a lifecycle, not just a row
+
+Dates get planned and then don't happen, or happen differently. The model
+should record that honestly:
+
+`planned → started → completed → rated`, with `cancelled` and `modified`
+as first-class outcomes rather than missing data.
+
+This also solves the plan → memory gap above: a completed date is the
+natural trigger for "how was it?" and for creating the memory.
+
+**Start/end, Uber-style — with one reservation.** The idea is a start
+button when the date begins and an end initiated by one person and
+confirmed by the other, auto-ending by the close of the next day.
+
+The reservation: the point of a date is being present with each other,
+and this asks people to pull out their phones at the two moments they
+least should. Uber needs it because billing depends on it; nothing here
+does.
+
+Suggested compromise — keep the states, drop the ceremony:
+- Starting is **optional**. If someone taps it, good; otherwise the
+  scheduled time implies it.
+- Either person can mark it done. The other is invited to rate, but the
+  date advances regardless — never leave it stuck waiting on someone.
+- Auto-complete at the end of the next day, then ask.
+
+Note the auto-end is the important part, because forgetting is the common
+case, not the exception.
+
+### Rating — and a caution worth taking seriously
+
+Each person rates the date independently. Two design points that matter
+more than they look:
+
+**Rate the date, never the partner's effort.** "3 stars" on something your
+partner planned is a landmine. Frame it around the experience — _would we
+do this again?_ — not the performance.
+
+**Consider hiding each rating until both are in.** Otherwise the second
+person anchors on the first, and the data is worth less as well as being
+socially awkward.
+
+A soft scale ("loved it / good / not for us") is likely better than stars,
+both for feelings and for feeding the generator.
+
+### Categories
+
+Indoor/outdoor, activity/dinner/experience, cost band, energy level, plus
+outcome (happened / cancelled / changed). Enables the stats view, better
+generation ("we haven't done anything outdoors in two months"), and makes
+the archive genuinely browsable.
+
+For dates that changed, record **planned vs actual**. The gap between them
+is often the better story.
+
+### Recurring rituals
+
+Couples pick a slot — Tuesday 5pm, or the first Sunday of the month — for
+a recurring shared moment. This directly attacks the frequency problem:
+it's appointment-based rather than waiting for someone to remember.
+
+Two formats to start:
+- **Relationship trivia** (below)
+- **The monthly five** — five things you loved, and five that didn't
+  work, from the past month
+
+On the monthly five: capturing the bad alongside the good is a genuinely
+good instinct — highlight-reel-only apps feel fake. Worth being careful
+that "hated" is framed at the month or at life, not at each other, or it
+becomes a grievance log. Possibly let each couple choose the framing.
+
+### Games and trivia, carried from V1
+
+V1's mechanics port well, and the best of them is the Final Key format:
+_which would I choose?_ — guessing your partner's answer. It generalises
+directly into "how well do you know each other".
+
+**The strongest version generates trivia from their own memories.** _Where
+were we on 11 Feb? Which of these three did we do first?_ That's
+impossible for any competitor to copy, gets better the longer they use the
+app, and turns the archive from storage into play. The V1 timeline puzzle
+maps onto it almost unchanged.
+
+### Notifications
+
+Required for the nudges, rituals and two-way moments above — none of them
+work without a way to reach people.
+
+Technically: this is a web app, so web push via a service worker (PWA),
+with email as the fallback and probably the better starting point. A
+native app is the real answer eventually, but not a step to take yet.
+
+Restraint matters. The reasons to interrupt someone are: your partner did
+something, your ritual is due, and a date needs closing. Anything beyond
+that trains people to disable notifications.
+
+### Further ideas worth considering
+
+- **Rain check.** A cancelled date shouldn't just die — offer to
+  reschedule it. Turns a failure into a future date.
+- **Year in review.** Annual recap of everywhere you went and everything
+  you kept. High emotional value, and the one genuinely shareable
+  artefact — a growth loop, if opt-in and deliberate.
+- **Date roulette.** Can't decide? Pick at random from your saved ideas.
+- **Weather-triggered prompts.** "It's clear on Saturday — here are the
+  outdoor ideas you saved."
+- **Balance, handled gently.** Who's been planning lately. Useful as a
+  nudge, dangerous as a scoreboard.
+
+### Deliberately avoid
+
+- **Streaks.** They drive engagement in other apps by manufacturing guilt.
+  Guilt about breaking a *relationship* streak is a genuinely bad thing to
+  introduce into someone's relationship.
+- **Points or leaderboards between partners.** Competitive dynamics
+  between two people who are meant to be on the same side.
+- **Public or social features.** This is private data. Sharing should be
+  an export the couple chooses, never a feed.
