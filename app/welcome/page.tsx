@@ -6,12 +6,9 @@ import {
   TOTAL_STEPS,
   type OnboardingStep,
 } from "@/lib/onboarding";
-import { advanceStep } from "./actions";
+import TextStep from "@/components/onboarding/TextStep";
+import { advanceStep, saveLocation, saveName } from "./actions";
 
-/**
- * Placeholder content per step. Chunks 3–7 replace each of these with the
- * real screen; the routing, resumability and progress around them is done.
- */
 const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
   name: {
     title: "What should we call you?",
@@ -42,14 +39,13 @@ const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
 export default async function WelcomePage() {
   const session = await requireSession();
 
-  // Already finished — nothing to do here.
   if (session.onboardedAt) redirect("/home");
 
   const step = session.onboardingStep;
   const copy = STEP_COPY[step];
   const current = stepNumber(step);
 
-  async function next() {
+  async function skip() {
     "use server";
     await advanceStep(step);
   }
@@ -77,20 +73,45 @@ export default async function WelcomePage() {
 
           <p className="text-white/60 leading-relaxed mb-8">{copy.body}</p>
 
-          <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-6 mb-8 text-center">
-            <p className="text-white/30 text-sm">
-              This step gets built in a later chunk.
-            </p>
-          </div>
+          {step === "name" && (
+            <TextStep
+              name="name"
+              label="YOUR NAME"
+              placeholder="Seedorf"
+              defaultValue={session.displayName ?? ""}
+              action={saveName}
+            />
+          )}
 
-          <form action={next}>
-            <button
-              type="submit"
-              className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 transition font-semibold"
-            >
-              {isOptional(step) ? "Skip for now" : "Continue"}
-            </button>
-          </form>
+          {step === "location" && (
+            <TextStep
+              name="location"
+              label="TOWN OR SUBURB"
+              placeholder="Penrith, NSW"
+              hint="Close enough to be useful, not so exact it's uncomfortable."
+              defaultValue={session.location ?? ""}
+              action={saveLocation}
+            />
+          )}
+
+          {step !== "name" && step !== "location" && (
+            <>
+              <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-6 mb-8 text-center">
+                <p className="text-white/30 text-sm">
+                  This step gets built in a later chunk.
+                </p>
+              </div>
+
+              <form action={skip}>
+                <button
+                  type="submit"
+                  className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 transition font-semibold"
+                >
+                  {isOptional(step) ? "Skip for now" : "Continue"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </main>
