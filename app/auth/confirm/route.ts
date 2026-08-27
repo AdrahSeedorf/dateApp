@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server";
+import { createOtpClient } from "@/lib/supabase/server";
 
 /**
  * Verifies a token hash and establishes a session.
@@ -18,13 +18,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=missing_token`);
   }
 
-  const supabase = await createClient();
+  const supabase = await createOtpClient();
   const { error } = await supabase.auth.verifyOtp({
     type,
     token_hash: tokenHash,
   });
 
   if (error) {
+    console.error("[confirm] verifyOtp failed", { type, error: error.message });
+
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(error.message)}`
     );

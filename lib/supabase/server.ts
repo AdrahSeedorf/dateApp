@@ -33,6 +33,40 @@ export async function createClient() {
 }
 
 /**
+ * Client for verifying a server-generated OTP / magic-link token hash.
+ *
+ * Forces the implicit flow. The default (PKCE) expects a code_verifier that
+ * the browser stored when it started the flow — but an invite link never
+ * started one, so PKCE verification fails with "Email link is invalid or
+ * expired" even when the token is perfectly good.
+ */
+export async function createOtpClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: { flowType: "implicit" },
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Read-only context; middleware handles refresh.
+          }
+        },
+      },
+    }
+  );
+}
+
+/**
  * Privileged client that BYPASSES Row Level Security.
  *
  * Only ever use this in trusted server code where the operation genuinely
