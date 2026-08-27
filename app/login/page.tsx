@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/home";
+  // Set when an invite/magic-link redemption bounced back here.
+  const inboundError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
@@ -52,6 +54,15 @@ function LoginForm() {
         </p>
 
         <h1 className="text-3xl font-bold mb-6">Welcome back</h1>
+
+        {inboundError && (
+          <div className="rounded-2xl border border-pink-300/30 bg-pink-500/10 p-4 mb-6">
+            <p className="text-pink-100 text-sm font-semibold mb-1">
+              That sign-in link didn&apos;t work
+            </p>
+            <p className="text-white/60 text-xs break-words">{inboundError}</p>
+          </div>
+        )}
 
         {status === "sent" ? (
           <div className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-6 text-center">

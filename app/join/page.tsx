@@ -48,6 +48,10 @@ export default async function JoinPage({ searchParams }: Props) {
     .maybeSingle();
 
   if (inviteError || !inviteRow) {
+    console.error("[join] invite lookup failed", {
+      tokenPreview: invite.slice(0, 8),
+      error: inviteError?.message,
+    });
     return <JoinError message="We couldn't find that invite." />;
   }
 
@@ -83,6 +87,10 @@ export default async function JoinPage({ searchParams }: Props) {
     });
 
     if (createError) {
+      console.error("[join] createUser failed", {
+        email,
+        error: createError.message,
+      });
       return <JoinError message="We couldn't set up an account for you." />;
     }
 
@@ -96,6 +104,12 @@ export default async function JoinPage({ searchParams }: Props) {
   const userId = linkResult.data?.user?.id;
 
   if (linkResult.error || !hashedToken || !userId) {
+    console.error("[join] generateLink failed", {
+      email,
+      error: linkResult.error?.message,
+      gotHashedToken: Boolean(hashedToken),
+      gotUserId: Boolean(userId),
+    });
     return <JoinError message="We couldn't create a sign-in link for you." />;
   }
 
@@ -110,6 +124,11 @@ export default async function JoinPage({ searchParams }: Props) {
   );
 
   if (profileError) {
+    console.error("[join] profile upsert failed", {
+      userId,
+      coupleId: inviteRow.couple_id,
+      error: profileError.message,
+    });
     return <JoinError message="We couldn't finish setting up your account." />;
   }
 
@@ -119,7 +138,9 @@ export default async function JoinPage({ searchParams }: Props) {
     .update({ used_at: new Date().toISOString() })
     .eq("token", invite);
 
+  // type must match the link that was generated above ("magiclink"), not
+  // "email" — verifyOtp rejects the hash otherwise.
   redirect(
-    `/auth/confirm?token_hash=${encodeURIComponent(hashedToken)}&type=email&next=/home`
+    `/auth/confirm?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink&next=/home`
   );
 }
