@@ -24,6 +24,9 @@ yarn-error.log*
 .env*
 !.env*.example
 
+# local setup scratchpad — contains live invite tokens (account keys)
+supabase/setup.local.sql
+
 # vercel
 .vercel
 

@@ -1,0 +1,110 @@
+-- ============================================================================
+--  TEMPLATE for supabase/setup.local.sql
+--
+--  Copy this to supabase/setup.local.sql (which is gitignored) and fill it
+--  in there. Never put real invite tokens in THIS file — it is committed.
+--
+--    cp supabase/setup.local.sql.example supabase/setup.local.sql
+-- ============================================================================
+
+
+-- ----------------------------------------------------------------------------
+--  YOUR VALUES  (fill these in as you go)
+-- ----------------------------------------------------------------------------
+--  Supabase project ref :
+--  V2 local URL         : http://localhost:3000
+--  V2 production URL    :
+--
+--  couple_id            :
+--
+--  ── You ───────────────────────────────────────────────────────────────────
+--    email  :
+--    token  :
+--    status : unused        (redeem this now to test the flow)
+--    link   : http://localhost:3000/join?invite=<token>
+--
+--  ── Her ────────────────────────────────────────────────────────────────────
+--    email  :
+--    token  :
+--    status : unused        <-- KEEP SAFE. This is the V1 handoff link.
+--    link   : https://<production-domain>/join?invite=<token>
+-- ----------------------------------------------------------------------------
+
+
+-- ============================================================================
+--  STEP 1 — Create the couple and both invites.  Run once.
+--  Returns two tokens. Copy them into the block above immediately.
+-- ============================================================================
+
+with new_couple as (
+  insert into public.couples (name, started_at)
+  values ('Us', null)                    -- start date left null on purpose;
+  returning id                           -- set it for real in STEP 2
+)
+insert into public.invites (token, couple_id, email, display_name, expires_at)
+select
+  encode(gen_random_bytes(16), 'hex'),
+  new_couple.id,
+  v.email,
+  v.display_name,
+  now() + interval '365 days'
+from new_couple,
+  (values
+    ('you@example.com',  'Your name'),
+    ('her@example.com',               'Her name')   -- <-- her real email
+  ) as v(email, display_name)
+returning token, email, display_name;
+
+
+-- ============================================================================
+--  STEP 2 — Set the real start date.  Run on/after the proposal.
+--  Until this runs the dashboard shows "—" instead of a wrong number.
+-- ============================================================================
+
+-- update public.couples
+-- set started_at = '2026-11-15'          -- <-- the real date
+-- where id = 'PASTE-COUPLE-ID';
+
+
+-- ============================================================================
+--  USEFUL QUERIES
+-- ============================================================================
+
+-- Find the couple id and current start date
+-- select id, name, started_at from public.couples;
+
+-- Check invite status without exposing full tokens
+-- select
+--   left(token, 8) || '…'                              as token_preview,
+--   email,
+--   display_name,
+--   case when used_at is null then 'unused' else 'redeemed' end as status,
+--   expires_at
+-- from public.invites
+-- order by created_at;
+
+-- Who is actually linked to the couple
+-- select p.display_name, u.email, p.couple_id
+-- from public.profiles p
+-- join auth.users u on u.id = p.id;
+
+-- Reissue an invite that got burned by accident.
+-- Safe to run: /join handles an already-existing account fine.
+-- update public.invites
+-- set used_at = null, expires_at = now() + interval '365 days'
+-- where email = 'her@example.com';
+
+-- Issue one more invite (e.g. a fresh link for her)
+-- insert into public.invites (token, couple_id, email, display_name, expires_at)
+-- values (
+--   encode(gen_random_bytes(16), 'hex'),
+--   'PASTE-COUPLE-ID',
+--   'her@example.com',
+--   'Her name',
+--   now() + interval '365 days'
+-- )
+-- returning token;
+
+-- Full reset of the couple + invites (destructive — wipes memories too,
+-- because everything cascades off couple_id)
+-- delete from public.couples where id = 'PASTE-COUPLE-ID';
