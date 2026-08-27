@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireOnboarded } from "@/lib/auth";
 import MemoryForm from "@/components/MemoryForm";
 
 type Props = {
@@ -9,21 +10,10 @@ type Props = {
 
 export default async function NewMemoryPage({ searchParams }: Props) {
   const { plan: planId } = await searchParams;
+  const session = await requireOnboarded();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("couple_id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile?.couple_id) redirect("/home");
+  if (!session.coupleId) redirect("/home");
 
   // If this memory came from a saved date, prefill from that plan.
   // RLS scopes the lookup, so a plan id from another couple returns nothing.
@@ -69,7 +59,7 @@ export default async function NewMemoryPage({ searchParams }: Props) {
         {!planTitle && <div className="mb-8" />}
 
         <MemoryForm
-          coupleId={profile.couple_id}
+          coupleId={session.coupleId}
           datePlanId={planTitle ? (planId ?? null) : null}
           initialTitle={planTitle ?? ""}
           initialLocation={planLocation ?? ""}

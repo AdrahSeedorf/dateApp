@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookHeart, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireOnboarded } from "@/lib/auth";
 import DateGenerator from "@/components/DateGenerator";
 
 type SavedPlan = {
@@ -15,21 +16,10 @@ type SavedPlan = {
 };
 
 export default async function DatesPage() {
+  const session = await requireOnboarded();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("couple_id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile?.couple_id) redirect("/home");
+  if (!session.coupleId) redirect("/home");
 
   const { data: plans, error } = await supabase
     .from("date_plans")
@@ -64,7 +54,7 @@ export default async function DatesPage() {
           Two real options, grounded in actual places near you.
         </p>
 
-        <DateGenerator coupleId={profile.couple_id} />
+        <DateGenerator coupleId={session.coupleId} />
 
         {savedPlans.length > 0 && (
           <div className="mt-14">

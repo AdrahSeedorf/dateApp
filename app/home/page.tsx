@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
 import { Calendar, Heart, Images, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireOnboarded } from "@/lib/auth";
 
 function daysBetween(startedAt: string | null): number | null {
   if (!startedAt) return null;
@@ -17,19 +18,13 @@ function daysBetween(startedAt: string | null): number | null {
 }
 
 export default async function HomePage() {
+  const session = await requireOnboarded();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, couple_id")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = {
+    display_name: session.displayName,
+    couple_id: session.coupleId,
+  };
 
   // Signed in but not attached to a couple yet.
   if (!profile?.couple_id) {

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireOnboarded } from "@/lib/auth";
 import { formatMemoryDate, signPaths, type Memory } from "@/lib/memories";
 
 type Props = {
@@ -10,13 +11,8 @@ type Props = {
 
 export default async function MemoryDetailPage({ params }: Props) {
   const { id } = await params;
+  await requireOnboarded();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
 
   const { data, error } = await supabase
     .from("memories")

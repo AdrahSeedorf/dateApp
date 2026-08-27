@@ -1,17 +1,13 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
 import { ImageIcon, MapPin, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireOnboarded } from "@/lib/auth";
 import { formatMemoryDate, signPaths, type Memory } from "@/lib/memories";
 
 export default async function MemoriesPage() {
+  await requireOnboarded();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
 
   const { data, error } = await supabase
     .from("memories")
