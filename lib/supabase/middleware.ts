@@ -40,12 +40,14 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Routes reachable without a session.
+  // Routes reachable without a session. /dev is development-only and
+  // returns 404 in any production build — see app/dev/login/route.ts.
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/join") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/login");
+    pathname.startsWith("/login") ||
+    (process.env.NODE_ENV !== "production" && pathname.startsWith("/dev"));
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
