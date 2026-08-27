@@ -83,6 +83,70 @@ export async function saveLocation(
 }
 
 /**
+ * Saves the idea someone picked during onboarding.
+ *
+ * Creates the couple if they don't have one yet. Invited people already do,
+ * but someone who signs up on their own has no container to put a plan in
+ * until this runs.
+ */
+export async function saveFirstPlan(idea: {
+  title: string;
+  activity: string;
+  locationType: string;
+  budgetEstimate: string;
+  outfitNote: string;
+  vibeNote: string;
+}): Promise<StepState> {
+  const session = await getSessionProfile();
+  if (!session) redirect("/login");
+
+  const supabase = await createClient();
+  let coupleId = session.coupleId;
+
+  if (!coupleId) {
+    const { data: couple, error: coupleError } = await supabase
+      .from("couples")
+      .insert({})
+      .select("id")
+      .single();
+
+    if (coupleError || !couple) {
+      console.error("[onboarding] couple create failed", coupleError?.message);
+      return { error: "Couldn't set that up. Try again." };
+    }
+
+    const { error: linkError } = await supabase
+      .from("profiles")
+      .update({ couple_id: couple.id })
+      .eq("id", session.userId);
+
+    if (linkError) {
+      console.error("[onboarding] couple link failed", linkError.message);
+      return { error: "Couldn't set that up. Try again." };
+    }
+
+    coupleId = couple.id;
+  }
+
+  const { error } = await supabase.from("date_plans").insert({
+    couple_id: coupleId,
+    title: idea.title,
+    activity: idea.activity,
+    location_type: idea.locationType,
+    budget_estimate: idea.budgetEstimate,
+    outfit_note: idea.outfitNote,
+    vibe_note: idea.vibeNote,
+  });
+
+  if (error) {
+    console.error("[onboarding] plan save failed", error.message);
+    return { error: "Couldn't save that idea. Try again." };
+  }
+
+  return {};
+}
+
+/**
  * Moves someone to the next step, or finishes onboarding if there isn't one.
  *
  * Takes the step the client believed it was on and ignores it if it doesn't

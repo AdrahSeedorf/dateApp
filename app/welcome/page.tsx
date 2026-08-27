@@ -7,6 +7,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding";
 import TextStep from "@/components/onboarding/TextStep";
+import GenerateStep from "@/components/onboarding/GenerateStep";
 import { advanceStep, saveLocation, saveName } from "./actions";
 
 const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
@@ -94,7 +95,11 @@ export default async function WelcomePage() {
             />
           )}
 
-          {step !== "name" && step !== "location" && (
+          {step === "generate" && (
+            <GenerateStep location={session.location ?? ""} onDone={skip} />
+          )}
+
+          {step !== "name" && step !== "location" && step !== "generate" && (
             <>
               <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-6 mb-8 text-center">
                 <p className="text-white/30 text-sm">
