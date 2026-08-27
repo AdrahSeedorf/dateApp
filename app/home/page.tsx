@@ -79,7 +79,7 @@ export default async function HomePage() {
       href: "/dates",
       icon: Sparkles,
       title: "Plan a date",
-      subtitle: "Get two real ideas for somewhere near you",
+      subtitle: "Two real ideas for somewhere near you",
     },
     {
       href: "/memories",

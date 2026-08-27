@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatMemoryDate, signPaths, type Memory } from "@/lib/memories";
 
@@ -21,7 +21,7 @@ export default async function MemoryDetailPage({ params }: Props) {
   const { data, error } = await supabase
     .from("memories")
     .select(
-      "id, title, description, memory_date, location, created_at, memory_media(id, storage_path, media_type)"
+      "id, title, description, memory_date, location, created_at, date_plan_id, memory_media(id, storage_path, media_type), date_plans(id, title)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -34,7 +34,18 @@ export default async function MemoryDetailPage({ params }: Props) {
   // doubles as the authorisation check.
   if (!data) notFound();
 
-  const memory = data as Memory;
+  type PlanRef = { id: string; title: string };
+
+  // PostgREST returns an embedded relation as an array unless it can prove
+  // the relationship is to-one. Normalise so either shape works.
+  const memory = data as unknown as Memory & {
+    date_plans?: PlanRef[] | PlanRef | null;
+  };
+
+  const fromPlan: PlanRef | null = Array.isArray(memory.date_plans)
+    ? memory.date_plans[0] ?? null
+    : memory.date_plans ?? null;
+
   const media = memory.memory_media ?? [];
   const signed = await signPaths(
     supabase,
@@ -64,6 +75,16 @@ export default async function MemoryDetailPage({ params }: Props) {
               <MapPin className="w-4 h-4" />
               {memory.location}
             </span>
+          )}
+
+          {fromPlan && (
+            <Link
+              href="/dates"
+              className="flex items-center gap-2 text-pink-300 hover:text-pink-200"
+            >
+              <Sparkles className="w-4 h-4" />
+              From a planned date
+            </Link>
           )}
         </div>
 

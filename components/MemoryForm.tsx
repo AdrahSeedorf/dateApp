@@ -13,6 +13,10 @@ import {
 
 type Props = {
   coupleId: string;
+  /** Set when this memory is being logged against a saved date plan. */
+  datePlanId?: string | null;
+  initialTitle?: string;
+  initialLocation?: string;
 };
 
 type Pending = {
@@ -21,14 +25,19 @@ type Pending = {
   previewUrl: string;
 };
 
-export default function MemoryForm({ coupleId }: Props) {
+export default function MemoryForm({
+  coupleId,
+  datePlanId = null,
+  initialTitle = "",
+  initialLocation = "",
+}: Props) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
   const [memoryDate, setMemoryDate] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(initialLocation);
   const [files, setFiles] = useState<Pending[]>([]);
 
   const [saving, setSaving] = useState(false);
@@ -86,6 +95,7 @@ export default function MemoryForm({ coupleId }: Props) {
       .from("memories")
       .insert({
         couple_id: coupleId,
+        date_plan_id: datePlanId,
         title: title.trim(),
         description: description.trim() || null,
         memory_date: memoryDate || null,
