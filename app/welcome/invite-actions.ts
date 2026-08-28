@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
+import { ensureCoupleId } from "@/lib/couple";
 
 export type InviteState =
   | { ok: true; link: string; reused: boolean }
@@ -51,32 +52,11 @@ export async function createPartnerInvite(
   }
 
   const supabase = await createClient();
-  let coupleId = session.coupleId;
+  const couple = await ensureCoupleId(supabase, session.userId, session.coupleId);
 
-  if (!coupleId) {
-    const { data: couple, error: coupleError } = await supabase
-      .from("couples")
-      .insert({})
-      .select("id")
-      .single();
+  if ("error" in couple) return { ok: false, error: couple.error };
 
-    if (coupleError || !couple) {
-      console.error("[invite] couple create failed", coupleError?.message);
-      return { ok: false, error: "Couldn't set that up. Try again." };
-    }
-
-    const { error: linkError } = await supabase
-      .from("profiles")
-      .update({ couple_id: couple.id })
-      .eq("id", session.userId);
-
-    if (linkError) {
-      console.error("[invite] couple link failed", linkError.message);
-      return { ok: false, error: "Couldn't set that up. Try again." };
-    }
-
-    coupleId = couple.id;
-  }
+  const coupleId = couple.coupleId;
 
   const admin = createAdminClient();
   const origin = await siteOrigin();

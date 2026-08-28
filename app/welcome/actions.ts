@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
+import { ensureCoupleId } from "@/lib/couple";
 import {
   isOnboardingStep,
   nextStep,
@@ -101,35 +102,12 @@ export async function saveFirstPlan(idea: {
   if (!session) redirect("/login");
 
   const supabase = await createClient();
-  let coupleId = session.coupleId;
+  const couple = await ensureCoupleId(supabase, session.userId, session.coupleId);
 
-  if (!coupleId) {
-    const { data: couple, error: coupleError } = await supabase
-      .from("couples")
-      .insert({})
-      .select("id")
-      .single();
-
-    if (coupleError || !couple) {
-      console.error("[onboarding] couple create failed", coupleError?.message);
-      return { error: "Couldn't set that up. Try again." };
-    }
-
-    const { error: linkError } = await supabase
-      .from("profiles")
-      .update({ couple_id: couple.id })
-      .eq("id", session.userId);
-
-    if (linkError) {
-      console.error("[onboarding] couple link failed", linkError.message);
-      return { error: "Couldn't set that up. Try again." };
-    }
-
-    coupleId = couple.id;
-  }
+  if ("error" in couple) return { error: couple.error };
 
   const { error } = await supabase.from("date_plans").insert({
-    couple_id: coupleId,
+    couple_id: couple.coupleId,
     title: idea.title,
     activity: idea.activity,
     location_type: idea.locationType,

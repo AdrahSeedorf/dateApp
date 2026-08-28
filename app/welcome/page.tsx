@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import {
-  isOptional,
   stepNumber,
   TOTAL_STEPS,
   type OnboardingStep,
@@ -10,6 +9,7 @@ import TextStep from "@/components/onboarding/TextStep";
 import GenerateStep from "@/components/onboarding/GenerateStep";
 import InviteStep from "@/components/onboarding/InviteStep";
 import PrefsStep from "@/components/onboarding/PrefsStep";
+import SeedMemoriesStep from "@/components/onboarding/SeedMemoriesStep";
 import { advanceStep, saveLocation, saveName } from "./actions";
 
 const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
@@ -105,28 +105,7 @@ export default async function WelcomePage() {
 
           {step === "prefs" && <PrefsStep onSkip={skip} />}
 
-          {step !== "name" &&
-            step !== "location" &&
-            step !== "generate" &&
-            step !== "invite" &&
-            step !== "prefs" && (
-            <>
-              <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-6 mb-8 text-center">
-                <p className="text-white/30 text-sm">
-                  This step gets built in a later chunk.
-                </p>
-              </div>
-
-              <form action={skip}>
-                <button
-                  type="submit"
-                  className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 transition font-semibold"
-                >
-                  {isOptional(step) ? "Skip for now" : "Continue"}
-                </button>
-              </form>
-            </>
-          )}
+          {step === "memories" && <SeedMemoriesStep onSkip={skip} />}
         </div>
       </div>
     </main>
