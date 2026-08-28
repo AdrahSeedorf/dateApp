@@ -5,6 +5,8 @@ export type DateIdea = {
   budgetEstimate: string;
   outfitNote: string;
   vibeNote: string;
+  /** Per access need, how this plan meets it. Filtered to what you may see. */
+  accessibility?: Record<string, string>;
 };
 
 export const MOODS = ["Cozy", "Playful", "Romantic", "Adventurous"];
@@ -22,7 +24,7 @@ export type GenerateInput = {
 };
 
 export type GenerateResult =
-  | { ok: true; options: DateIdea[] }
+  | { ok: true; options: DateIdea[]; accessWarning: boolean }
   | { ok: false; error: string };
 
 /**
@@ -49,7 +51,11 @@ export async function generateDateIdeas(
       return { ok: false, error: "No ideas came back. Try again." };
     }
 
-    return { ok: true, options: data.options };
+    return {
+      ok: true,
+      options: data.options,
+      accessWarning: Boolean(data.accessWarning),
+    };
   } catch {
     return {
       ok: false,

@@ -35,6 +35,7 @@ export default function GenerateStep({ location, onDone }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [savedIndex, setSavedIndex] = useState<number | null>(null);
+  const [accessWarning, setAccessWarning] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const ready = mood && budget && setting && time;
@@ -62,6 +63,7 @@ export default function GenerateStep({ location, onDone }: Props) {
     }
 
     setOptions(result.options);
+    setAccessWarning(result.accessWarning);
   }
 
   function save(index: number) {
@@ -107,6 +109,16 @@ export default function GenerateStep({ location, onDone }: Props) {
             />
           ))}
         </div>
+
+        {accessWarning && (
+          <div className="rounded-2xl border border-amber-300/30 bg-amber-500/10 p-4 mb-5">
+            <p className="text-amber-100 text-sm leading-relaxed">
+              These didn&apos;t clearly account for everything you said a
+              date needs to work around. Check them carefully, or generate
+              another pair.
+            </p>
+          </div>
+        )}
 
         {error && <p className="text-pink-200 text-sm mb-4">{error}</p>}
 
