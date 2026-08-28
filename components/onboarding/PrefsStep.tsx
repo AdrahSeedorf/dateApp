@@ -3,6 +3,8 @@
 import { useActionState, useTransition } from "react";
 import { Lock } from "lucide-react";
 import { ACCESS_NEEDS } from "@/lib/accessNeeds";
+import { AVOID_OPTIONS, INTEREST_GROUPS } from "@/lib/interests";
+import ChipGroup from "./ChipGroup";
 import { savePrefs, type PrefsState } from "@/app/welcome/prefs-actions";
 
 type Props = {
@@ -54,27 +56,34 @@ export default function PrefsStep({ onSkip }: Props) {
 
   return (
     <form action={formAction}>
-      <p className="text-white/30 text-xs mb-5">
-        Separate each with a comma. All of this is optional.
+      <p className="text-white/30 text-xs mb-6">
+        Tap whatever fits. All of this is optional.
       </p>
 
-      <ListField
-        name="interests"
-        label="THINGS YOU BOTH LIKE"
-        placeholder="live music, hiking, good coffee"
-      />
+      <p className="text-white/50 text-sm mb-4 tracking-[0.1em]">
+        THINGS YOU&apos;RE INTO
+      </p>
+
+      {INTEREST_GROUPS.map((group) => (
+        <ChipGroup
+          key={group.label}
+          name="interests"
+          legend={group.label}
+          options={group.items}
+        />
+      ))}
 
       <ListField
         name="want_to_try"
-        label="THINGS YOU'D LIKE TO TRY"
-        placeholder="pottery, kayaking"
+        label="ANYTHING YOU'D LIKE TO TRY"
+        placeholder="pottery, kayaking, that new place on the corner"
       />
 
-      <ListField
-        name="avoid"
-        label="THINGS TO AVOID"
-        placeholder="seafood, late nights"
-      />
+      <p className="text-white/50 text-sm mb-3 mt-8 tracking-[0.1em]">
+        THINGS TO AVOID
+      </p>
+
+      <ChipGroup name="avoid" options={AVOID_OPTIONS} />
 
       <fieldset className="border-0 p-0 m-0 mt-8 mb-5">
         <legend className="text-white/50 text-sm mb-2 tracking-[0.1em]">

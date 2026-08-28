@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { ACCESS_NEEDS, type AccessNeeds } from "@/lib/accessNeeds";
+import { ALL_INTERESTS, AVOID_OPTIONS, keepKnown } from "@/lib/interests";
 import { advanceStep } from "./actions";
 
 export type PrefsState = { error?: string };
@@ -46,9 +47,18 @@ export async function savePrefs(
   const { error } = await supabase.from("profile_prefs").upsert(
     {
       profile_id: session.userId,
-      interests: parseList(formData.get("interests")),
+      // Chips arrive as repeated form values. Filtered against the known
+      // lists so a crafted request can't stuff arbitrary text into the
+      // arrays that later get put in front of the model.
+      interests: keepKnown(
+        formData.getAll("interests").map(String),
+        ALL_INTERESTS
+      ).slice(0, MAX_ITEMS),
       want_to_try: parseList(formData.get("want_to_try")),
-      avoid: parseList(formData.get("avoid")),
+      avoid: keepKnown(
+        formData.getAll("avoid").map(String),
+        AVOID_OPTIONS
+      ).slice(0, MAX_ITEMS),
       access_needs: accessNeeds,
       access_notes: notes || null,
       share_access_with_partner:
