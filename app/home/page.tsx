@@ -92,14 +92,12 @@ export default async function HomePage() {
             {couple?.name ? couple.name.toUpperCase() : "OUR JOURNEY"}
           </p>
 
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="text-white/40 hover:text-white text-sm"
-            >
-              Sign out
-            </button>
-          </form>
+          <Link
+            href="/profile"
+            className="text-white/40 hover:text-white text-sm"
+          >
+            Profile
+          </Link>
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold mb-3 flex items-center gap-4">
@@ -140,12 +138,15 @@ export default async function HomePage() {
         </div>
 
         {!couple?.started_at && (
-          <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5 flex items-center gap-3">
+          <Link
+            href="/profile"
+            className="mt-10 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-5 flex items-center gap-3"
+          >
             <Calendar className="w-5 h-5 text-white/40 shrink-0" />
             <p className="text-white/50 text-sm">
               Set your start date to turn on the days counter.
             </p>
-          </div>
+          </Link>
         )}
       </div>
     </main>

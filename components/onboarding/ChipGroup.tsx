@@ -4,6 +4,8 @@ type Props = {
   name: string;
   options: readonly string[];
   legend?: string;
+  /** Already-chosen values, for editing rather than first-time selection. */
+  selected?: readonly string[];
 };
 
 /**
@@ -13,7 +15,14 @@ type Props = {
  * the whole step is one server action, so there's nothing to synchronise
  * and selections survive a failed submit for free.
  */
-export default function ChipGroup({ name, options, legend }: Props) {
+export default function ChipGroup({
+  name,
+  options,
+  legend,
+  selected = [],
+}: Props) {
+  const chosen = new Set(selected);
+
   return (
     <fieldset className="border-0 p-0 m-0 mb-4">
       {legend && (
@@ -29,6 +38,7 @@ export default function ChipGroup({ name, options, legend }: Props) {
               type="checkbox"
               name={name}
               value={option}
+              defaultChecked={chosen.has(option)}
               className="sr-only peer"
             />
 
