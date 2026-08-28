@@ -39,6 +39,15 @@ const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
   },
 };
 
+const STEP_WIDTH: Record<OnboardingStep, string> = {
+  name: "max-w-md",
+  location: "max-w-md",
+  generate: "max-w-2xl",
+  invite: "max-w-md",
+  prefs: "max-w-3xl",
+  memories: "max-w-xl",
+};
+
 export default async function WelcomePage() {
   const session = await requireSession();
 
@@ -48,6 +57,10 @@ export default async function WelcomePage() {
   const copy = STEP_COPY[step];
   const current = stepNumber(step);
 
+  // Single-question steps want a narrow column; the content-heavy ones need
+  // room or they turn into a very long, very thin scroll.
+  const width = STEP_WIDTH[step];
+
   async function skip() {
     "use server";
     await advanceStep(step);
@@ -55,7 +68,7 @@ export default async function WelcomePage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
-      <div className="max-w-md w-full">
+      <div className={`${width} w-full`}>
         <div className="flex items-center gap-2 mb-8">
           {Array.from({ length: TOTAL_STEPS }, (_, index) => (
             <div

@@ -15,7 +15,7 @@ type Props = {
  */
 export default function ChipGroup({ name, options, legend }: Props) {
   return (
-    <fieldset className="border-0 p-0 m-0 mb-5">
+    <fieldset className="border-0 p-0 m-0 mb-4">
       {legend && (
         <legend className="text-white/40 text-xs tracking-[0.15em] mb-3">
           {legend.toUpperCase()}

@@ -73,13 +73,15 @@ export default function PrefsStep({ onSkip }: Props) {
         />
       ))}
 
-      <ListField
-        name="want_to_try"
-        label="ANYTHING YOU'D LIKE TO TRY"
-        placeholder="pottery, kayaking, that new place on the corner"
-      />
+      <div className="mt-8 mb-2">
+        <ListField
+          name="want_to_try"
+          label="ANYTHING YOU'D LIKE TO TRY"
+          placeholder="pottery, kayaking, that new place on the corner"
+        />
+      </div>
 
-      <p className="text-white/50 text-sm mb-3 mt-8 tracking-[0.1em]">
+      <p className="text-white/50 text-sm mb-3 mt-6 tracking-[0.1em]">
         THINGS TO AVOID
       </p>
 
@@ -94,7 +96,7 @@ export default function PrefsStep({ onSkip }: Props) {
           So we never suggest something that doesn&apos;t work for you.
         </p>
 
-        <div className="space-y-2">
+        <div className="grid sm:grid-cols-2 gap-2">
           {ACCESS_NEEDS.map((need) => (
             <label
               key={need.key}
