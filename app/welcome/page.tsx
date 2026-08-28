@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth";
 import {
   previousStep,
   stepNumber,
-  TOTAL_STEPS,
+  totalSteps,
   type OnboardingStep,
 } from "@/lib/onboarding";
 import TextStep from "@/components/onboarding/TextStep";
@@ -49,14 +49,36 @@ const STEP_WIDTH: Record<OnboardingStep, string> = {
   memories: "max-w-xl",
 };
 
+/**
+ * A partner arriving through an invite is in a different situation to
+ * someone setting this up alone, and shouldn't be told to invite anyone.
+ */
+const PARTNER_COPY: Partial<Record<OnboardingStep, { title: string; body: string }>> = {
+  name: {
+    title: "You're in",
+    body: "Someone set this up for the two of you. What should we call you?",
+  },
+  prefs: {
+    title: "Anything we should know?",
+    body: "This shapes the date ideas you'll both get. Skip it if you'd rather.",
+  },
+  memories: {
+    title: "Add a few from before",
+    body: "Anything you'd want kept. Skip it and add them whenever.",
+  },
+};
+
 export default async function WelcomePage() {
   const session = await requireSession();
 
   if (session.onboardedAt) redirect("/home");
 
   const step = session.onboardingStep;
-  const copy = STEP_COPY[step];
-  const current = stepNumber(step);
+  const path = session.onboardingPath;
+  const copy =
+    (path === "partner" ? PARTNER_COPY[step] : undefined) ?? STEP_COPY[step];
+  const current = stepNumber(step, path);
+  const total = totalSteps(path);
 
   // Single-question steps want a narrow column; the content-heavy ones need
   // room or they turn into a very long, very thin scroll.
@@ -72,7 +94,7 @@ export default async function WelcomePage() {
     await goBack(step);
   }
 
-  const canGoBack = previousStep(step) !== null;
+  const canGoBack = previousStep(step, path) !== null;
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
@@ -91,7 +113,7 @@ export default async function WelcomePage() {
         </div>
 
         <div className="flex items-center gap-2 mb-8">
-          {Array.from({ length: TOTAL_STEPS }, (_, index) => (
+          {Array.from({ length: total }, (_, index) => (
             <div
               key={index}
               className={`h-1 flex-1 rounded-full ${
@@ -103,7 +125,7 @@ export default async function WelcomePage() {
 
         <div className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8">
           <p className="tracking-[0.3em] text-xs text-pink-200 mb-4">
-            STEP {current} OF {TOTAL_STEPS}
+            STEP {current} OF {total}
           </p>
 
           <h1 className="text-2xl md:text-3xl font-bold mb-3">{copy.title}</h1>

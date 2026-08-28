@@ -96,6 +96,18 @@ export async function GET(request: NextRequest) {
     return fail(origin, "We couldn't create a sign-in link.");
   }
 
+  // Someone redeeming an invite into a couple that already has a member is
+  // the second person, and gets the shorter flow: no "generate your first
+  // date" (their partner just did) and no "invite your partner" (they are
+  // the invite). Recorded now rather than inferred later, so onboarding
+  // can't change shape underneath them.
+  const { count: existingMembers } = await admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("couple_id", inviteRow.couple_id);
+
+  const path = (existingMembers ?? 0) > 0 ? "partner" : "creator";
+
   // Attach the account to the couple before signing in, so the dashboard
   // never loads without a couple_id.
   const { error: profileError } = await admin.from("profiles").upsert(
@@ -103,6 +115,7 @@ export async function GET(request: NextRequest) {
       id: userId,
       couple_id: inviteRow.couple_id,
       display_name: inviteRow.display_name,
+      onboarding_path: path,
     },
     { onConflict: "id" }
   );

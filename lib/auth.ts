@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { FIRST_STEP, isOnboardingStep, type OnboardingStep } from "@/lib/onboarding";
+import {
+  FIRST_STEP,
+  isOnboardingStep,
+  type OnboardingPath,
+  type OnboardingStep,
+} from "@/lib/onboarding";
 
 export type SessionProfile = {
   userId: string;
@@ -10,6 +15,7 @@ export type SessionProfile = {
   location: string | null;
   onboardedAt: string | null;
   onboardingStep: OnboardingStep;
+  onboardingPath: OnboardingPath;
 };
 
 /**
@@ -29,7 +35,9 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("display_name, couple_id, location, onboarded_at, onboarding_step")
+    .select(
+      "display_name, couple_id, location, onboarded_at, onboarding_step, onboarding_path"
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -49,6 +57,10 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
     onboardingStep: isOnboardingStep(profile?.onboarding_step)
       ? profile.onboarding_step
       : FIRST_STEP,
+    // Null means creator — correct for every account created before paths
+    // existed, and for anyone who starts their own.
+    onboardingPath:
+      profile?.onboarding_path === "partner" ? "partner" : "creator",
   };
 }
 

@@ -141,7 +141,7 @@ export async function goBack(from: OnboardingStep) {
     return;
   }
 
-  const previous = previousStep(from);
+  const previous = previousStep(from, session.onboardingPath);
   if (!previous) return;
 
   const supabase = await createClient();
@@ -176,7 +176,7 @@ export async function advanceStep(from: OnboardingStep) {
   }
 
   const supabase = await createClient();
-  const next = nextStep(from);
+  const next = nextStep(from, session.onboardingPath);
 
   const { error } = await supabase
     .from("profiles")
