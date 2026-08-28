@@ -34,6 +34,12 @@ export function nextStep(current: OnboardingStep): OnboardingStep | null {
   return ONBOARDING_STEPS[index + 1] ?? null;
 }
 
+/** Null on the first step, where there's nothing to go back to. */
+export function previousStep(current: OnboardingStep): OnboardingStep | null {
+  const index = ONBOARDING_STEPS.indexOf(current);
+  return index > 0 ? ONBOARDING_STEPS[index - 1] : null;
+}
+
 export function stepNumber(step: OnboardingStep): number {
   return ONBOARDING_STEPS.indexOf(step) + 1;
 }

@@ -8,6 +8,7 @@ import { ensureCoupleId } from "@/lib/couple";
 import {
   isOnboardingStep,
   nextStep,
+  previousStep,
   type OnboardingStep,
 } from "@/lib/onboarding";
 
@@ -122,6 +123,39 @@ export async function saveFirstPlan(idea: {
   }
 
   return {};
+}
+
+/**
+ * Steps back one.
+ *
+ * Answers are already written to the profile as you go, and each step
+ * prefills from what's stored, so going back to fix a typo and coming
+ * forward again loses nothing.
+ */
+export async function goBack(from: OnboardingStep) {
+  const session = await getSessionProfile();
+  if (!session) redirect("/login");
+
+  if (from !== session.onboardingStep) {
+    revalidatePath("/welcome");
+    return;
+  }
+
+  const previous = previousStep(from);
+  if (!previous) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarding_step: previous })
+    .eq("id", session.userId);
+
+  if (error) {
+    console.error("[onboarding] failed to step back", error.message);
+    throw new Error("Couldn't go back. Try again.");
+  }
+
+  revalidatePath("/welcome");
 }
 
 /**

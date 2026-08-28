@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import {
+  previousStep,
   stepNumber,
   TOTAL_STEPS,
   type OnboardingStep,
@@ -10,7 +11,7 @@ import GenerateStep from "@/components/onboarding/GenerateStep";
 import InviteStep from "@/components/onboarding/InviteStep";
 import PrefsStep from "@/components/onboarding/PrefsStep";
 import SeedMemoriesStep from "@/components/onboarding/SeedMemoriesStep";
-import { advanceStep, saveLocation, saveName } from "./actions";
+import { advanceStep, goBack, saveLocation, saveName } from "./actions";
 
 const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
   name: {
@@ -66,9 +67,29 @@ export default async function WelcomePage() {
     await advanceStep(step);
   }
 
+  async function back() {
+    "use server";
+    await goBack(step);
+  }
+
+  const canGoBack = previousStep(step) !== null;
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
       <div className={`${width} w-full`}>
+        <div className="h-6 mb-3">
+          {canGoBack && (
+            <form action={back}>
+              <button
+                type="submit"
+                className="text-white/40 hover:text-white text-sm transition"
+              >
+                ← Back
+              </button>
+            </form>
+          )}
+        </div>
+
         <div className="flex items-center gap-2 mb-8">
           {Array.from({ length: TOTAL_STEPS }, (_, index) => (
             <div
