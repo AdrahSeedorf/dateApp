@@ -41,6 +41,20 @@ for sub in ("migrations", "tests"):
         raw = open(path).read()
         bare = strip_comments(raw)
 
+        if sub == "tests":
+            # Tests may only create throwaway objects in pg_temp. Creating
+            # anything in public made the harness depend on how the SQL
+            # editor scopes statements, which cost three debugging rounds.
+            stray = re.findall(
+                r"create\s+(?:table|sequence|view)\s+(?!if\s+not\s+exists\s+)?public\.",
+                bare, re.I,
+            )
+            if stray:
+                print(f"FAIL  {sub}/{name}: creates objects in public; "
+                      f"use pg_temp or nothing at all")
+                failures += 1
+                continue
+
         meta = re.findall(r"^\s*\\\w+", bare, re.M)
         if meta:
             print(f"FAIL  {sub}/{name}: psql meta-commands {sorted(set(meta))}")
@@ -58,10 +72,12 @@ for sub in ("migrations", "tests"):
         claimed = re.search(r"ALL (\d+) TESTS PASSED", raw)
         if claimed:
             # Count both assertion helpers, minus one each for their own
-            # definitions.
+            # definitions. Counted against the comment-stripped source: a
+            # doc comment that mentions pg_temp.ok() is not an assertion,
+            # and counting one was how this check first went wrong.
             found = (
-                len(re.findall(r"pg_temp\.ok\(", raw)) - 1
-                + len(re.findall(r"pg_temp\.ok_eq\(", raw)) - 1
+                len(re.findall(r"pg_temp\.ok\(", bare)) - 1
+                + len(re.findall(r"pg_temp\.ok_eq\(", bare)) - 1
             )
             want = int(claimed.group(1))
             if found != want:

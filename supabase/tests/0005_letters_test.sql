@@ -10,8 +10,9 @@
 --   Paste the whole file into the Supabase SQL editor and execute it.
 --   It ends in ROLLBACK, so it leaves nothing behind.
 --
---   Success looks like a final notice reading "ALL 19 TESTS PASSED".
---   Any failure raises and aborts, so partial output means something broke.
+--   Success is a single row reading "ALL 19 TESTS PASSED". Any failure
+--   raises and aborts the transaction, so you get a red error naming the
+--   check instead. There is no quiet failure and no third outcome.
 --
 -- HOW IT WORKS
 --   Supabase derives auth.uid() from the `request.jwt.claims` setting, so
@@ -27,13 +28,26 @@ begin;
 -- ----------------------------------------------------------------------------
 -- Helpers
 -- ----------------------------------------------------------------------------
+
+-- Assertions raise on failure, which aborts the whole transaction. So there
+-- are only two possible outcomes: a red error naming the failed check, or
+-- the final SELECT below. Reaching the end *is* the pass.
+--
+-- Per-check detail goes to RAISE NOTICE, which psql shows and the Supabase
+-- SQL editor discards. That is fine: the notices are a convenience, and the
+-- pass/fail signal does not depend on them.
+--
+-- An earlier version accumulated results in a table so the editor could
+-- display every check. It was not worth it — the table turned out to be the
+-- least portable part of the file, and failed twice for reasons that had
+-- nothing to do with what is being tested.
 create or replace function pg_temp.ok(p_condition boolean, p_what text)
 returns void language plpgsql as $$
 begin
   if not p_condition then
     raise exception 'FAILED: %', p_what;
   end if;
-  raise notice '  pass: %', p_what;
+  raise notice 'pass — %', p_what;
 end $$;
 
 /**
@@ -55,7 +69,7 @@ begin
       coalesce(quote_literal(p_expected), 'NULL'),
       coalesce(quote_literal(p_actual), 'NULL');
   end if;
-  raise notice '  pass: %', p_what;
+  raise notice 'pass — %', p_what;
 end $$;
 
 /**
@@ -82,7 +96,7 @@ begin
       'FAILED: auth.uid() is null — request.jwt.claims was not applied.';
   end if;
 
-  raise notice '  (acting as % / %)', v_role, v_uid;
+  raise notice '(acting as % / %)', v_role, v_uid;
 end $$;
 
 -- ----------------------------------------------------------------------------
@@ -163,7 +177,7 @@ do $$ begin perform pg_temp.assert_restricted(); end $$;
 do $$
 declare v_count int; v_body text; v_rows int;
 begin
-  raise notice 'Recipient:';
+  raise notice '── Recipient ──';
 
   -- Sees the three sealed letters, not the draft.
   select count(*) into v_count from public.letters;
@@ -253,7 +267,7 @@ do $$ begin perform pg_temp.assert_restricted(); end $$;
 do $$
 declare v_count int; v_rows int;
 begin
-  raise notice 'Author:';
+  raise notice '── Author ──';
 
   select count(*) into v_count from public.letter_contents;
   perform pg_temp.ok(v_count = 4, 'author can read every body they wrote');
@@ -297,7 +311,7 @@ do $$ begin perform pg_temp.assert_restricted(); end $$;
 do $$
 declare v_count int;
 begin
-  raise notice 'Outsider:';
+  raise notice '── Outsider ──';
 
   select count(*) into v_count from public.letters;
   perform pg_temp.ok(v_count = 0, 'sees none of another couple''s letters');
@@ -321,6 +335,8 @@ end $$;
 
 reset role;
 
-do $$ begin raise notice E'\n  ALL 19 TESTS PASSED\n'; end $$;
+-- The last statement that returns rows, so it is what the SQL editor shows.
+-- If you can read this, every check above passed.
+select 'ALL 19 TESTS PASSED — the letter lock holds' as result;
 
 rollback;
