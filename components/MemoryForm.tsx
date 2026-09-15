@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Card, Field, TextArea } from "@/components/ui";
 import { Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -154,141 +155,112 @@ export default function MemoryForm({
   }
 
   return (
-    <form
-      onSubmit={save}
-      className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8"
-    >
-      <div className="mb-6">
-        <label
-          htmlFor="title"
-          className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-        >
-          TITLE
-        </label>
-        <input
+    <Card as="form" onSubmit={save} className="p-8">
+      <div className="space-y-space-lg">
+        <Field
           id="title"
+          label="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="First ice cream"
           required
-          className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
         />
-      </div>
 
-      <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label
-            htmlFor="date"
-            className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-          >
-            DATE
-          </label>
-          <input
+        <div className="grid gap-space-md sm:grid-cols-2">
+          <Field
             id="date"
             type="date"
+            label="Date"
             value={memoryDate}
             onChange={(e) => setMemoryDate(e.target.value)}
-            className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white"
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="location"
-            className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-          >
-            WHERE
-          </label>
-          <input
+          <Field
             id="location"
+            label="Where"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Penrith"
-            className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
           />
         </div>
-      </div>
 
-      <div className="mb-6">
-        <label
-          htmlFor="description"
-          className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-        >
-          WHAT HAPPENED
-        </label>
-        <textarea
+        <TextArea
           id="description"
+          label="What happened"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
           placeholder="The bit you'd want to remember."
-          className="w-full px-5 py-3 rounded-2xl border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30 resize-none"
         />
-      </div>
 
-      <div className="mb-6">
-        <p className="text-white/50 text-sm mb-2 tracking-[0.1em]">
-          PHOTOS &amp; VIDEOS
+        <div>
+          <p className="mb-space-xs text-label-sm text-on-surface-variant tracking-[0.15em]">
+            PHOTOS &amp; VIDEOS
+          </p>
+
+          <label className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--glass-rim-strong)] bg-[var(--glass-1)] px-5 py-6 text-body-md text-on-surface-variant transition hover:border-primary/40 hover:bg-[var(--glass-2)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary">
+            <Upload className="h-4 w-4" aria-hidden />
+            Choose files
+            <input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => addFiles(e.target.files)}
+              className="sr-only"
+            />
+          </label>
+
+          {files.length > 0 && (
+            <ul className="mt-space-md grid grid-cols-3 gap-space-sm sm:grid-cols-4">
+              {files.map((pending, index) => (
+                <li
+                  key={`${pending.file.name}-${index}`}
+                  className="relative aspect-square overflow-hidden rounded-md border border-[var(--glass-rim)] bg-surface-container-lowest"
+                >
+                  {pending.mediaType === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pending.previewUrl}
+                      alt={pending.file.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={pending.previewUrl}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="absolute right-1.5 top-1.5 rounded-full bg-surface/80 p-1.5 text-on-surface transition hover:bg-surface"
+                    aria-label={`Remove ${pending.file.name}`}
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {errorMessage && (
+          <p role="alert" className="break-words text-body-sm text-error">
+            {errorMessage}
+          </p>
+        )}
+
+        {/* Uploads run file by file, so progress is a changing message rather
+            than a spinner. Announced politely so it isn't only visual. */}
+        <p aria-live="polite" className="sr-only">
+          {saving ? progress : ""}
         </p>
 
-        <label className="flex items-center justify-center gap-2 px-5 py-6 rounded-2xl border border-dashed border-white/15 bg-white/5 hover:bg-white/10 hover:border-pink-300/40 transition cursor-pointer text-sm text-white/60">
-          <Upload className="w-4 h-4" />
-          Choose files
-          <input
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            onChange={(e) => addFiles(e.target.files)}
-            className="hidden"
-          />
-        </label>
-
-        {files.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
-            {files.map((pending, index) => (
-              <div
-                key={`${pending.file.name}-${index}`}
-                className="relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-black/30"
-              >
-                {pending.mediaType === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={pending.previewUrl}
-                    alt={pending.file.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <video
-                    src={pending.previewUrl}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="absolute top-1.5 right-1.5 rounded-full bg-black/70 hover:bg-black p-1 transition"
-                  aria-label={`Remove ${pending.file.name}`}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <Button type="submit" fullWidth disabled={saving || !title.trim()}>
+          {saving ? progress || "Saving…" : "Save memory"}
+        </Button>
       </div>
-
-      {errorMessage && (
-        <p className="text-pink-200 text-sm mb-5 break-words">{errorMessage}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={saving || !title.trim()}
-        className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-      >
-        {saving ? progress || "Saving..." : "Save memory"}
-      </button>
-    </form>
+    </Card>
   );
 }

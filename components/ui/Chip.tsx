@@ -88,6 +88,63 @@ export function ChipGroup({ legend, children, scroll, className }: GroupProps) {
   );
 }
 
+type CheckCardProps = {
+  name: string;
+  label: ReactNode;
+  hint?: ReactNode;
+  value?: string;
+  defaultChecked?: boolean;
+  className?: string;
+};
+
+/**
+ * A checkbox with a label and supporting text, in a tappable card.
+ *
+ * For choices that need explaining — access needs, privacy switches — where
+ * a bare chip wouldn't carry enough context. The whole card is the target
+ * rather than just the 16px box.
+ *
+ * The native checkbox is kept visible (rather than hidden behind a styled
+ * span as Chip does) because these are genuinely consequential settings, and
+ * a real checkbox is unambiguous about its state in every assistive tool.
+ */
+export function CheckCard({
+  name,
+  label,
+  hint,
+  value,
+  defaultChecked = false,
+  className,
+}: CheckCardProps) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-start gap-3 rounded-lg p-space-md transition",
+        "border border-[var(--glass-rim)] bg-[var(--glass-1)] hover:bg-[var(--glass-2)]",
+        "has-[:checked]:border-primary has-[:checked]:bg-[rgb(var(--c-glow-a)/0.12)]",
+        "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary",
+        className
+      )}
+    >
+      <input
+        type="checkbox"
+        name={name}
+        value={value}
+        defaultChecked={defaultChecked}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--c-primary)]"
+      />
+      <span className="min-w-0">
+        <span className="block text-body-md text-on-surface">{label}</span>
+        {hint && (
+          <span className="mt-0.5 block text-body-sm text-on-surface-variant leading-relaxed">
+            {hint}
+          </span>
+        )}
+      </span>
+    </label>
+  );
+}
+
 type PillProps = {
   children: ReactNode;
   tone?: "neutral" | "primary" | "secondary" | "tertiary";

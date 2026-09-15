@@ -4,6 +4,7 @@ import { requireOnboarded } from "@/lib/auth";
 import { parseAccessNeeds } from "@/lib/accessNeeds";
 import PrefsFields, { type PrefsValues } from "@/components/prefs/PrefsFields";
 import SaveableForm from "@/components/profile/SaveableForm";
+import { Field, Screen, ScreenHeader } from "@/components/ui";
 import {
   changeEmail,
   saveAbout,
@@ -50,55 +51,35 @@ export default async function ProfilePage() {
     : { data: null };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/home"
-          className="text-white/50 hover:text-white mb-8 inline-block"
-        >
-          ← Our Journey
-        </Link>
+    <Screen className="mx-auto max-w-3xl">
+      <Link
+        href="/home"
+        className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"
+      >
+        ← Our Journey
+      </Link>
 
-        <p className="tracking-[0.35em] text-xs text-pink-200 mb-3">
-          YOUR PROFILE
-        </p>
-
-        <h1 className="text-3xl md:text-5xl font-bold mb-10">
-          {session.displayName ?? "You"}
-        </h1>
+      <ScreenHeader
+        eyebrow="Your profile"
+        title={session.displayName ?? "You"}
+      />
 
         <SaveableForm action={saveAbout} title="About you">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="display_name"
-                className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-              >
-                NAME
-              </label>
-              <input
-                id="display_name"
-                name="display_name"
-                defaultValue={session.displayName ?? ""}
-                className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white"
-              />
-            </div>
+          <div className="grid gap-space-md sm:grid-cols-2">
+            <Field
+              id="display_name"
+              name="display_name"
+              label="Name"
+              defaultValue={session.displayName ?? ""}
+            />
 
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-              >
-                TOWN OR SUBURB
-              </label>
-              <input
-                id="location"
-                name="location"
-                defaultValue={session.location ?? ""}
-                placeholder="Penrith, NSW"
-                className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
-              />
-            </div>
+            <Field
+              id="location"
+              name="location"
+              label="Town or suburb"
+              defaultValue={session.location ?? ""}
+              placeholder="Penrith, NSW"
+            />
           </div>
         </SaveableForm>
 
@@ -120,41 +101,23 @@ export default async function ProfilePage() {
                 : "Nobody else has joined yet. Changes here will show for them when they do."
             }
           >
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="couple_name"
-                  className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-                >
-                  WHAT TO CALL YOURSELVES
-                </label>
-                <input
-                  id="couple_name"
-                  name="couple_name"
-                  defaultValue={couple?.name ?? ""}
-                  placeholder="Us"
-                  className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
-                />
-              </div>
+            <div className="grid gap-space-md sm:grid-cols-2">
+              <Field
+                id="couple_name"
+                name="couple_name"
+                label="What to call yourselves"
+                defaultValue={couple?.name ?? ""}
+                placeholder="Us"
+              />
 
-              <div>
-                <label
-                  htmlFor="started_at"
-                  className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-                >
-                  TOGETHER SINCE
-                </label>
-                <input
-                  id="started_at"
-                  name="started_at"
-                  type="date"
-                  defaultValue={couple?.started_at ?? ""}
-                  className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white"
-                />
-                <p className="text-white/30 text-xs mt-2">
-                  Turns on the days counter. Leave empty until it&apos;s real.
-                </p>
-              </div>
+              <Field
+                id="started_at"
+                name="started_at"
+                type="date"
+                label="Together since"
+                defaultValue={couple?.started_at ?? ""}
+                hint="Turns on the days counter. Leave empty until it's real."
+              />
             </div>
           </SaveableForm>
         )}
@@ -165,36 +128,24 @@ export default async function ProfilePage() {
           description="You sign in with a link sent to this address."
           submitLabel="Change email"
         >
-          <label
-            htmlFor="email"
-            className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-          >
-            EMAIL
-          </label>
-
-          <input
+          <Field
             id="email"
             name="email"
             type="email"
+            label="Email"
             defaultValue={session.email ?? ""}
-            className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white"
+            hint="Changing this needs confirming from both the old and new address before it takes effect."
           />
-
-          <p className="text-white/30 text-xs mt-2">
-            Changing this needs confirming from both the old and new address
-            before it takes effect.
-          </p>
         </SaveableForm>
 
-        <form action="/auth/signout" method="post" className="mt-10">
-          <button
-            type="submit"
-            className="text-white/40 hover:text-white text-sm"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
-    </main>
+      <form action="/auth/signout" method="post" className="mt-space-xl">
+        <button
+          type="submit"
+          className="text-body-sm text-on-surface-variant transition hover:text-on-surface"
+        >
+          Sign out
+        </button>
+      </form>
+    </Screen>
   );
 }

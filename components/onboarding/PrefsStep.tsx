@@ -2,6 +2,7 @@
 
 import { useActionState, useTransition } from "react";
 import PrefsFields, { EMPTY_PREFS } from "@/components/prefs/PrefsFields";
+import { Button } from "@/components/ui";
 import { savePrefs, type PrefsState } from "@/app/welcome/prefs-actions";
 
 type Props = {
@@ -24,7 +25,7 @@ export default function PrefsStep({ onSkip }: Props) {
 
   return (
     <form action={formAction}>
-      <p className="text-white/30 text-xs mb-6">
+      <p className="text-body-sm text-on-surface-variant mb-space-lg">
         Tap whatever fits. All of this is optional, and you can change it
         later.
       </p>
@@ -32,25 +33,26 @@ export default function PrefsStep({ onSkip }: Props) {
       <PrefsFields values={EMPTY_PREFS} />
 
       {state.error && (
-        <p className="text-pink-200 text-sm mt-4">{state.error}</p>
+        <p role="alert" className="text-body-sm text-error mt-space-md">
+          {state.error}
+        </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full mt-6 px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-      >
-        {pending ? "Saving..." : "Save and continue"}
-      </button>
+      <Button type="submit" fullWidth disabled={pending} className="mt-space-lg">
+        {pending ? "Saving…" : "Save and continue"}
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
+        fullWidth
         onClick={skip}
         disabled={skipping}
-        className="w-full mt-3 px-6 py-3 rounded-full text-white/40 hover:text-white/70 transition text-sm"
+        className="mt-space-sm"
       >
         Skip for now
-      </button>
+      </Button>
     </form>
   );
 }

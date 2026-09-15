@@ -4,6 +4,7 @@ import { BookHeart, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
 import DateGenerator from "@/components/DateGenerator";
+import { Card, Screen, ScreenHeader, Section } from "@/components/ui";
 
 type SavedPlan = {
   id: string;
@@ -33,81 +34,71 @@ export default async function DatesPage() {
   const savedPlans = (plans ?? []) as SavedPlan[];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_center,#3b1030,#050510_75%)] px-6 py-12">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/home"
-          className="text-white/50 hover:text-white mb-8 inline-block"
+    <Screen className="mx-auto max-w-3xl">
+      <Link
+        href="/home"
+        className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"
+      >
+        ← Our Journey
+      </Link>
+
+      <ScreenHeader
+        eyebrow="Plan a date"
+        title="What should we do?"
+        body="Two real options, grounded in actual places near you."
+      />
+
+      <DateGenerator coupleId={session.coupleId} />
+
+      {savedPlans.length > 0 && (
+        <Section
+          title={`Saved ideas (${savedPlans.length})`}
+          className="mt-space-xl"
         >
-          ← Our Journey
-        </Link>
+          <div className="space-y-space-md">
+            {savedPlans.map((plan) => (
+              <Card key={plan.id} elevation="flat" className="p-space-lg">
+                <div className="mb-space-sm flex items-start justify-between gap-space-md">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-title-md text-on-surface">
+                      {plan.title}
+                    </p>
 
-        <p className="tracking-[0.35em] text-xs text-pink-300 mb-3">
-          PLAN A DATE
-        </p>
-
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">
-          What should we do?
-        </h1>
-
-        <p className="text-white/60 mb-10">
-          Two real options, grounded in actual places near you.
-        </p>
-
-        <DateGenerator coupleId={session.coupleId} />
-
-        {savedPlans.length > 0 && (
-          <div className="mt-14">
-            <h2 className="text-xl font-semibold mb-5">
-              Saved ideas ({savedPlans.length})
-            </h2>
-
-            <div className="space-y-4">
-              {savedPlans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-5"
-                >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold mb-1">{plan.title}</p>
-
-                      {plan.location_type && (
-                        <p className="text-white/50 text-sm flex items-center gap-1.5">
-                          <MapPin className="w-3 h-3 shrink-0" />
-                          <span className="line-clamp-1">
-                            {plan.location_type}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-
-                    {plan.budget_estimate && (
-                      <p className="text-white/40 text-xs shrink-0">
-                        {plan.budget_estimate}
+                    {plan.location_type && (
+                      <p className="flex items-center gap-1.5 text-body-sm text-on-surface-variant">
+                        <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                        <span className="line-clamp-1">
+                          {plan.location_type}
+                        </span>
                       </p>
                     )}
                   </div>
 
-                  {plan.activity && (
-                    <p className="text-white/60 text-sm leading-relaxed mb-4">
-                      {plan.activity}
+                  {plan.budget_estimate && (
+                    <p className="shrink-0 text-label-sm text-on-surface-variant">
+                      {plan.budget_estimate}
                     </p>
                   )}
-
-                  <Link
-                    href={`/memories/new?plan=${plan.id}`}
-                    className="inline-flex items-center gap-2 text-pink-300 hover:text-pink-200 text-sm"
-                  >
-                    <BookHeart className="w-4 h-4" />
-                    We did this — save the memory
-                  </Link>
                 </div>
-              ))}
-            </div>
+
+                {plan.activity && (
+                  <p className="mb-space-md text-body-md text-on-surface-variant leading-relaxed">
+                    {plan.activity}
+                  </p>
+                )}
+
+                <Link
+                  href={`/memories/new?plan=${plan.id}`}
+                  className="inline-flex items-center gap-2 text-body-sm text-primary transition hover:text-primary-container"
+                >
+                  <BookHeart className="h-4 w-4" aria-hidden />
+                  We did this — save the memory
+                </Link>
+              </Card>
+            ))}
           </div>
-        )}
-      </div>
-    </main>
+        </Section>
+      )}
+    </Screen>
   );
 }

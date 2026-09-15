@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
+import { Button, Card, Field } from "@/components/ui";
 import { seedMemories, type SeedState } from "@/app/welcome/memory-actions";
 
 type Props = {
@@ -36,63 +37,55 @@ export default function SeedMemoriesStep({ onSkip }: Props) {
 
   return (
     <form action={formAction}>
-      <div className="space-y-4 mb-5">
+      <div className="space-y-space-md mb-space-md">
         {PROMPTS.map((prompt, slot) => (
-          <div
-            key={slot}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4"
-          >
-            <label
-              htmlFor={`title-${slot}`}
-              className="block text-white/40 text-xs tracking-[0.15em] mb-2"
-            >
-              {prompt.toUpperCase()}
-            </label>
-
-            <input
+          // flat rather than glass: three stacked blur layers here is a lot
+          // of compositing for what is really just a grouped form row.
+          <Card key={slot} elevation="flat" className="p-space-md space-y-space-sm">
+            <Field
               id={`title-${slot}`}
               name={`title-${slot}`}
+              label={prompt}
               placeholder="What was it?"
               autoComplete="off"
-              className="w-full px-4 py-2.5 mb-2 rounded-full border border-white/10 bg-black/20 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
             />
 
-            <input
+            <Field
               id={`date-${slot}`}
               name={`date-${slot}`}
+              label="When"
               type="date"
-              aria-label={`Date for ${prompt}`}
-              className="w-full px-4 py-2.5 rounded-full border border-white/10 bg-black/20 focus:border-pink-300 focus:outline-none text-sm text-white"
             />
-          </div>
+          </Card>
         ))}
       </div>
 
-      <p className="text-white/30 text-xs mb-6">
+      <p className="text-body-sm text-on-surface-variant mb-space-lg">
         Fill in as many as you like. The date is optional, and you can add
         photos to any of these later.
       </p>
 
       {state.error && (
-        <p className="text-pink-200 text-sm mb-4">{state.error}</p>
+        <p role="alert" className="text-body-sm text-error mb-space-md">
+          {state.error}
+        </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-      >
-        {pending ? "Saving..." : "Save and finish"}
-      </button>
+      <Button type="submit" fullWidth disabled={pending}>
+        {pending ? "Saving…" : "Save and finish"}
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
+        fullWidth
         onClick={skip}
         disabled={skipping}
-        className="w-full mt-3 px-6 py-3 rounded-full text-white/40 hover:text-white/70 transition text-sm"
+        className="mt-space-sm"
       >
         Skip for now
-      </button>
+      </Button>
     </form>
   );
 }

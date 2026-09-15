@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Calendar, Heart, Images, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
+import { Card, Screen } from "@/components/ui";
 
 function daysBetween(startedAt: string | null): number | null {
   if (!startedAt) return null;
@@ -29,15 +30,17 @@ export default async function HomePage() {
   // Signed in but not attached to a couple yet.
   if (!profile?.couple_id) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6">
-        <div className="max-w-md w-full text-center rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8">
-          <h1 className="text-2xl font-bold mb-4">Almost there</h1>
-          <p className="text-white/60 leading-relaxed">
+      <Screen className="flex min-h-screen items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <h1 className="font-headline text-headline-md text-on-surface mb-space-md">
+            Almost there
+          </h1>
+          <p className="text-body-md text-on-surface-variant leading-relaxed">
             Your account isn&apos;t linked to anyone yet. If you were sent an
             invite link, open that link to finish setting things up.
           </p>
-        </div>
-      </main>
+        </Card>
+      </Screen>
     );
   }
 
@@ -85,70 +88,84 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-10">
-          <p className="tracking-[0.4em] text-xs text-pink-200">
-            {couple?.name ? couple.name.toUpperCase() : "OUR JOURNEY"}
-          </p>
-
-          <Link
-            href="/profile"
-            className="text-white/40 hover:text-white text-sm"
-          >
-            Profile
-          </Link>
-        </div>
-
-        <h1 className="text-4xl md:text-6xl font-bold mb-3 flex items-center gap-4">
-          <Heart className="w-10 h-10 text-pink-300" />
-          {profile.display_name ? `Hey, ${profile.display_name}` : "Our Journey"}
-        </h1>
-
-        <p className="text-white/60 text-lg mb-12">
-          The proposal was only the beginning.
+    <Screen className="mx-auto max-w-5xl">
+      <div className="mt-space-lg mb-space-xl flex items-center justify-between">
+        <p className="text-label-sm text-primary tracking-[0.4em]">
+          {couple?.name ? couple.name.toUpperCase() : "OUR JOURNEY"}
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          {stats.map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-5 text-center"
-            >
-              <p className="text-white/40 text-xs tracking-[0.2em] mb-2">
-                {label.toUpperCase()}
-              </p>
-              <p className="text-xl font-semibold text-pink-100">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {cards.map((card) => (
-            <Link
-              key={card.href}
-              href={card.href}
-              className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8 hover:border-pink-300/50 transition block"
-            >
-              <card.icon className="w-10 h-10 text-pink-300 mb-5" />
-              <h2 className="text-2xl font-bold mb-2">{card.title}</h2>
-              <p className="text-white/60">{card.subtitle}</p>
-            </Link>
-          ))}
-        </div>
-
-        {!couple?.started_at && (
-          <Link
-            href="/profile"
-            className="mt-10 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-5 flex items-center gap-3"
-          >
-            <Calendar className="w-5 h-5 text-white/40 shrink-0" />
-            <p className="text-white/50 text-sm">
-              Set your start date to turn on the days counter.
-            </p>
-          </Link>
-        )}
+        <Link
+          href="/profile"
+          className="text-body-sm text-on-surface-variant transition hover:text-on-surface"
+        >
+          Profile
+        </Link>
       </div>
-    </main>
+
+      <h1 className="mb-space-sm flex items-center gap-space-md font-headline text-display-lg-mobile md:text-display-lg text-on-surface">
+        <Heart className="h-10 w-10 shrink-0 text-primary" aria-hidden />
+        {profile.display_name ? (
+          <>
+            Hey, <em>{profile.display_name}</em>
+          </>
+        ) : (
+          "Our Journey"
+        )}
+      </h1>
+
+      <p className="mb-space-xl text-body-lg text-on-surface-variant">
+        The proposal was only the beginning.
+      </p>
+
+      <div className="mb-space-xl grid grid-cols-2 gap-space-md md:grid-cols-4">
+        {stats.map(([label, value]) => (
+          <Card key={label} elevation="flat" className="p-space-lg text-center">
+            <p className="mb-space-xs text-label-sm text-on-surface-variant tracking-[0.2em]">
+              {label.toUpperCase()}
+            </p>
+            <p className="font-headline text-headline-sm text-primary">
+              {value}
+            </p>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-space-lg md:grid-cols-2">
+        {cards.map((card) => (
+          <Card
+            key={card.href}
+            as={Link}
+            href={card.href}
+            interactive
+            className="block p-8 transition hover:border-primary/50"
+          >
+            <card.icon className="mb-space-md h-10 w-10 text-primary" aria-hidden />
+            <h2 className="mb-space-xs font-headline text-headline-sm text-on-surface">
+              {card.title}
+            </h2>
+            <p className="text-body-md text-on-surface-variant">
+              {card.subtitle}
+            </p>
+          </Card>
+        ))}
+      </div>
+
+      {!couple?.started_at && (
+        <Card
+          as={Link}
+          href="/profile"
+          elevation="flat"
+          className="mt-space-xl flex items-center gap-space-sm p-space-lg transition hover:border-primary/50"
+        >
+          <Calendar
+            className="h-5 w-5 shrink-0 text-on-surface-variant"
+            aria-hidden
+          />
+          <p className="text-body-sm text-on-surface-variant">
+            Set your start date to turn on the days counter.
+          </p>
+        </Card>
+      )}
+    </Screen>
   );
 }

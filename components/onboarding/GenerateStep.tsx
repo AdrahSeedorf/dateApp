@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import PillGroup from "@/components/dates/PillGroup";
-import DateOptionCard from "@/components/dates/DateOptionCard";
+import DateOptionCard, {
+  AccessWarning,
+  GeneratedCaveat,
+} from "@/components/dates/DateOptionCard";
+import { Button } from "@/components/ui";
 import {
   BUDGETS,
   generateDateIdeas,
@@ -90,59 +94,51 @@ export default function GenerateStep({ location, onDone }: Props) {
 
   if (options.length > 0) {
     return (
-      <div>
-        <div className="space-y-5 mb-6">
+      <div className="space-y-space-lg">
+        <div className="space-y-space-md">
           {options.map((option, index) => (
             <DateOptionCard
               key={index}
               option={option}
               index={index}
               action={
-                <button
+                <Button
+                  fullWidth
+                  size="sm"
+                  variant={savedIndex === index ? "secondary" : "primary"}
                   onClick={() => save(index)}
                   disabled={pending || savedIndex !== null}
-                  className="w-full px-5 py-3 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-emerald-500/30 disabled:text-emerald-100 transition text-sm font-semibold"
                 >
                   {savedIndex === index ? "Saved ✓" : "Save this one"}
-                </button>
+                </Button>
               }
             />
           ))}
         </div>
 
-        {accessWarning && (
-          <div className="rounded-2xl border border-amber-300/30 bg-amber-500/10 p-4 mb-5">
-            <p className="text-amber-100 text-sm leading-relaxed">
-              These didn&apos;t clearly account for everything you said a
-              date needs to work around. Check them carefully, or generate
-              another pair.
-            </p>
-          </div>
+        {accessWarning && <AccessWarning />}
+
+        {error && (
+          <p role="alert" className="text-body-sm text-error">
+            {error}
+          </p>
         )}
 
-        {error && <p className="text-pink-200 text-sm mb-4">{error}</p>}
+        <GeneratedCaveat />
 
-        <p className="text-white/30 text-xs mb-6">
-          Named places are AI best guesses — worth checking they&apos;re open
-          before you go.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
+        <div className="flex flex-col gap-space-sm sm:flex-row">
+          <Button
+            variant="secondary"
             onClick={generate}
             disabled={loading || pending}
-            className="flex-1 px-6 py-4 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 transition"
+            className="flex-1"
           >
-            {loading ? "Thinking..." : "Try two more"}
-          </button>
+            {loading ? "Thinking…" : "Try two more"}
+          </Button>
 
-          <button
-            onClick={finish}
-            disabled={pending}
-            className="flex-1 px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:opacity-50 transition font-semibold"
-          >
+          <Button onClick={finish} disabled={pending} className="flex-1">
             Continue
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -155,23 +151,26 @@ export default function GenerateStep({ location, onDone }: Props) {
       <PillGroup label="Setting" options={SETTINGS} value={setting} onChange={setSetting} />
       <PillGroup label="Time available" options={TIMES} value={time} onChange={setTime} />
 
-      {error && <p className="text-pink-200 text-sm mb-4">{error}</p>}
+      {error && (
+        <p role="alert" className="text-body-sm text-error mb-space-md">
+          {error}
+        </p>
+      )}
 
-      <button
-        onClick={generate}
-        disabled={!ready || loading}
-        className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-      >
-        {loading ? "Thinking of something..." : "Show me two ideas"}
-      </button>
+      <Button fullWidth onClick={generate} disabled={!ready || loading}>
+        {loading ? "Thinking of something…" : "Show me two ideas"}
+      </Button>
 
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        fullWidth
         onClick={finish}
         disabled={pending}
-        className="w-full mt-3 px-6 py-3 rounded-full text-white/40 hover:text-white/70 transition text-sm"
+        className="mt-space-sm"
       >
         I&apos;ll do this later
-      </button>
+      </Button>
     </div>
   );
 }

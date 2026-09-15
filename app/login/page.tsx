@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Button, Card, Field, Screen } from "@/components/ui";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -47,70 +48,72 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6">
-      <div className="max-w-md w-full rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8">
-        <p className="tracking-[0.35em] text-xs text-pink-200 mb-4">
+    <Screen className="flex min-h-screen items-center justify-center">
+      <Card className="w-full max-w-md">
+        <p className="text-label-sm text-primary tracking-[0.35em] mb-space-sm">
           SIGN IN
         </p>
 
-        <h1 className="text-3xl font-bold mb-6">Welcome back</h1>
+        <h1 className="font-headline text-headline-lg text-on-surface mb-space-lg">
+          Welcome back
+        </h1>
 
         {inboundError && (
-          <div className="rounded-2xl border border-pink-300/30 bg-pink-500/10 p-4 mb-6">
-            <p className="text-pink-100 text-sm font-semibold mb-1">
+          // role="alert" so it's announced — someone arriving here from a
+          // dead invite link needs to hear why, not just see it.
+          <div
+            role="alert"
+            className="rounded-lg border border-error/30 bg-error-container/40 p-space-md mb-space-lg"
+          >
+            <p className="text-label-lg text-on-error-container mb-1">
               That sign-in link didn&apos;t work
             </p>
-            <p className="text-white/60 text-xs break-words">{inboundError}</p>
+            <p className="text-body-sm text-on-error-container/80 break-words">
+              {inboundError}
+            </p>
           </div>
         )}
 
         {status === "sent" ? (
-          <div className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-6 text-center">
-            <p className="text-emerald-100 mb-2 font-semibold">
+          <div
+            role="status"
+            className="rounded-lg border border-[var(--glass-rim-strong)] bg-[rgb(var(--c-glow-c)/0.12)] p-space-lg text-center"
+          >
+            <p className="text-title-md text-tertiary mb-space-xs">
               Check your email
             </p>
-            <p className="text-white/60 text-sm">
+            <p className="text-body-sm text-on-surface-variant">
               We sent a sign-in link to {email}. Open it on this device.
             </p>
           </div>
         ) : (
-          <form onSubmit={sendMagicLink}>
-            <label
-              htmlFor="email"
-              className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-            >
-              EMAIL
-            </label>
-
-            <input
-              id="email"
+          <form onSubmit={sendMagicLink} className="space-y-space-md">
+            <Field
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              autoComplete="email"
               required
-              className="w-full px-5 py-3 mb-5 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
+              error={status === "error" ? errorMessage : undefined}
             />
 
-            {status === "error" && (
-              <p className="text-pink-200 text-sm mb-5">{errorMessage}</p>
-            )}
-
-            <button
+            <Button
               type="submit"
+              fullWidth
               disabled={status === "sending" || !email.trim()}
-              className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
             >
-              {status === "sending" ? "Sending..." : "Email me a sign-in link"}
-            </button>
+              {status === "sending" ? "Sending…" : "Email me a sign-in link"}
+            </Button>
 
-            <p className="text-white/30 text-xs mt-6 text-center">
+            <p className="text-body-sm text-on-surface-variant/70 text-center">
               No password. We&apos;ll email you a link that signs you in.
             </p>
           </form>
         )}
-      </div>
-    </main>
+      </Card>
+    </Screen>
   );
 }
 

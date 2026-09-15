@@ -8,7 +8,7 @@
 export { cn } from "./cn";
 export { default as Card } from "./Card";
 export { default as Button } from "./Button";
-export { Chip, ChipGroup, Pill } from "./Chip";
+export { Chip, ChipGroup, CheckCard, Pill } from "./Chip";
 export { Field, TextArea } from "./Field";
 export { default as Screen, ScreenHeader, Section } from "./Screen";
 export { Timeline, TimelineItem, ProgressRail } from "./Timeline";

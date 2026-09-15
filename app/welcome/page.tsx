@@ -6,6 +6,7 @@ import {
   totalSteps,
   type OnboardingStep,
 } from "@/lib/onboarding";
+import { Card, Screen } from "@/components/ui";
 import TextStep from "@/components/onboarding/TextStep";
 import GenerateStep from "@/components/onboarding/GenerateStep";
 import InviteStep from "@/components/onboarding/InviteStep";
@@ -97,14 +98,14 @@ export default async function WelcomePage() {
   const canGoBack = previousStep(step, path) !== null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
+    <Screen className="flex min-h-screen items-center justify-center py-12">
       <div className={`${width} w-full`}>
-        <div className="h-6 mb-3">
+        <div className="mb-space-sm h-6">
           {canGoBack && (
             <form action={back}>
               <button
                 type="submit"
-                className="text-white/40 hover:text-white text-sm transition"
+                className="text-body-sm text-on-surface-variant transition hover:text-on-surface"
               >
                 ← Back
               </button>
@@ -112,30 +113,40 @@ export default async function WelcomePage() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 mb-8">
+        {/* One rail per step rather than a single bar: the number of steps
+            differs by path, and seeing how many are left is the point. */}
+        <div
+          className="mb-space-xl flex items-center gap-2"
+          role="group"
+          aria-label={`Step ${current} of ${total}`}
+        >
           {Array.from({ length: total }, (_, index) => (
             <div
               key={index}
               className={`h-1 flex-1 rounded-full ${
-                index < current ? "bg-pink-400" : "bg-white/10"
+                index < current ? "bg-primary" : "bg-[var(--glass-rim)]"
               }`}
             />
           ))}
         </div>
 
-        <div className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8">
-          <p className="tracking-[0.3em] text-xs text-pink-200 mb-4">
+        <Card className="p-8">
+          <p className="text-label-sm text-primary tracking-[0.3em] mb-space-md">
             STEP {current} OF {total}
           </p>
 
-          <h1 className="text-2xl md:text-3xl font-bold mb-3">{copy.title}</h1>
+          <h1 className="font-headline text-headline-md md:text-headline-lg text-on-surface mb-space-sm text-balance">
+            {copy.title}
+          </h1>
 
-          <p className="text-white/60 leading-relaxed mb-8">{copy.body}</p>
+          <p className="text-body-md text-on-surface-variant leading-relaxed mb-space-xl text-pretty">
+            {copy.body}
+          </p>
 
           {step === "name" && (
             <TextStep
               name="name"
-              label="YOUR NAME"
+              label="Your name"
               placeholder="Seedorf"
               defaultValue={session.displayName ?? ""}
               action={saveName}
@@ -145,7 +156,7 @@ export default async function WelcomePage() {
           {step === "location" && (
             <TextStep
               name="location"
-              label="TOWN OR SUBURB"
+              label="Town or suburb"
               placeholder="Penrith, NSW"
               hint="Close enough to be useful, not so exact it's uncomfortable."
               defaultValue={session.location ?? ""}
@@ -162,8 +173,8 @@ export default async function WelcomePage() {
           {step === "prefs" && <PrefsStep onSkip={skip} />}
 
           {step === "memories" && <SeedMemoriesStep onSkip={skip} />}
-        </div>
+        </Card>
       </div>
-    </main>
+    </Screen>
   );
 }

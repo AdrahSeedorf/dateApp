@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Button, Field } from "@/components/ui";
 import type { StepState } from "@/app/welcome/actions";
 
 type Props = {
@@ -35,43 +36,22 @@ export default function TextStep({
   );
 
   return (
-    <form action={formAction}>
-      <label
-        htmlFor={name}
-        className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-      >
-        {label}
-      </label>
-
-      <input
+    <form action={formAction} className="space-y-space-lg">
+      <Field
         id={name}
         name={name}
-        defaultValue={defaultValue}
+        label={label}
         placeholder={placeholder}
+        hint={hint}
+        error={state.error}
+        defaultValue={defaultValue}
         autoComplete="off"
         autoFocus
-        aria-describedby={state.error ? `${name}-error` : undefined}
-        aria-invalid={state.error ? true : undefined}
-        className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
       />
 
-      {hint && !state.error && (
-        <p className="text-white/30 text-xs mt-2">{hint}</p>
-      )}
-
-      {state.error && (
-        <p id={`${name}-error`} className="text-pink-200 text-sm mt-2">
-          {state.error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full mt-6 px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-      >
-        {pending ? "Saving..." : submitLabel}
-      </button>
+      <Button type="submit" fullWidth disabled={pending}>
+        {pending ? "Saving…" : submitLabel}
+      </Button>
     </form>
   );
 }

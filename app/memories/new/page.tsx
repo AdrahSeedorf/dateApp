@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
 import MemoryForm from "@/components/MemoryForm";
+import { Screen, ScreenHeader } from "@/components/ui";
 
 type Props = {
   searchParams: Promise<{ plan?: string }>;
@@ -34,37 +35,33 @@ export default async function NewMemoryPage({ searchParams }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_center,#2d0f36,#050510_75%)] px-6 py-12">
-      <div className="max-w-2xl mx-auto">
-        <Link
-          href={planTitle ? "/dates" : "/memories"}
-          className="text-white/50 hover:text-white mb-8 inline-block"
-        >
-          ← {planTitle ? "Plan a date" : "Our memories"}
-        </Link>
+    <Screen className="mx-auto max-w-2xl">
+      <Link
+        href={planTitle ? "/dates" : "/memories"}
+        className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"
+      >
+        ← {planTitle ? "Plan a date" : "Our memories"}
+      </Link>
 
-        <p className="tracking-[0.35em] text-xs text-pink-200 mb-3">
-          NEW MEMORY
-        </p>
+      <ScreenHeader
+        eyebrow="New memory"
+        title="Keep this one"
+        body={
+          planTitle ? (
+            <>
+              From your saved date:{" "}
+              <span className="text-primary">{planTitle}</span>
+            </>
+          ) : undefined
+        }
+      />
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Keep this one</h1>
-
-        {planTitle && (
-          <p className="text-white/50 mb-8">
-            From your saved date:{" "}
-            <span className="text-pink-200">{planTitle}</span>
-          </p>
-        )}
-
-        {!planTitle && <div className="mb-8" />}
-
-        <MemoryForm
-          coupleId={session.coupleId}
-          datePlanId={planTitle ? (planId ?? null) : null}
-          initialTitle={planTitle ?? ""}
-          initialLocation={planLocation ?? ""}
-        />
-      </div>
-    </main>
+      <MemoryForm
+        coupleId={session.coupleId}
+        datePlanId={planTitle ? (planId ?? null) : null}
+        initialTitle={planTitle ?? ""}
+        initialLocation={planLocation ?? ""}
+      />
+    </Screen>
   );
 }

@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import PillGroup from "@/components/dates/PillGroup";
-import DateOptionCard from "@/components/dates/DateOptionCard";
+import DateOptionCard, {
+  AccessWarning,
+  GeneratedCaveat,
+} from "@/components/dates/DateOptionCard";
+import { Button, Card, Field, TextArea } from "@/components/ui";
 import {
   BUDGETS,
   generateDateIdeas,
@@ -114,26 +118,16 @@ export default function DateGenerator({ coupleId }: Props) {
   return (
     <>
       {phase === "form" && (
-        <div className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8">
-          <div className="mb-6">
-            <label
-              htmlFor="location"
-              className="block text-white/50 text-sm mb-3 tracking-[0.15em]"
-            >
-              LOCATION
-            </label>
-
-            <input
+        <Card className="p-8">
+          <div className="mb-space-lg">
+            <Field
               id="location"
+              label="Location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Penrith, NSW"
-              className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
+              hint="So it can name real places near you, not generic ones."
             />
-
-            <p className="text-white/30 text-xs mt-2">
-              So it can name real places near you, not generic ones.
-            </p>
           </div>
 
           <PillGroup label="Mood" options={MOODS} value={mood} onChange={setMood} />
@@ -141,105 +135,89 @@ export default function DateGenerator({ coupleId }: Props) {
           <PillGroup label="Setting" options={SETTINGS} value={setting} onChange={setSetting} />
           <PillGroup label="Time available" options={TIMES} value={time} onChange={setTime} />
 
-          <div className="mb-6">
-            <label
-              htmlFor="note"
-              className="block text-white/50 text-sm mb-3 tracking-[0.15em]"
-            >
-              ANYTHING IN MIND? (OPTIONAL)
-            </label>
-
-            <textarea
+          <div className="mb-space-lg">
+            <TextArea
               id="note"
+              label="Anything in mind? (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               placeholder="e.g. she's had a stressful week, keep it low-key"
-              className="w-full px-5 py-3 rounded-2xl border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30 resize-none"
+              hint="This is where it gets specific."
             />
-
-            <p className="text-white/30 text-xs mt-2">
-              This is where it gets specific.
-            </p>
           </div>
 
-          <button
-            onClick={generate}
-            disabled={!canGenerate}
-            className="w-full px-6 py-4 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-white/10 disabled:text-white/40 transition font-semibold"
-          >
+          <Button fullWidth onClick={generate} disabled={!canGenerate}>
             Generate date ideas
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {phase === "loading" && (
-        <div className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-16 text-center">
-          <div className="text-4xl mb-5 animate-pulse">✦</div>
-          <p className="text-white/60">
-            Thinking of something worth the drive...
+        <Card className="p-16 text-center" aria-busy="true">
+          <div aria-hidden className="mb-space-md animate-pulse text-4xl text-primary">
+            ✦
+          </div>
+          {/* role=status so the wait is announced, not just drawn. */}
+          <p role="status" className="text-body-md text-on-surface-variant">
+            Thinking of something worth the drive…
           </p>
-        </div>
+        </Card>
       )}
 
       {phase === "error" && (
-        <div className="rounded-3xl border border-pink-300/20 bg-white/5 backdrop-blur-xl p-8 text-center">
-          <p className="text-pink-200 mb-6 break-words">{errorMessage}</p>
-          <button
-            onClick={() => setPhase("form")}
-            className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 transition"
-          >
+        <Card className="p-8 text-center">
+          <p role="alert" className="mb-space-lg break-words text-body-md text-error">
+            {errorMessage}
+          </p>
+          <Button variant="secondary" size="sm" onClick={() => setPhase("form")}>
             Try again
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {phase === "result" && options.length > 0 && (
         <div>
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="mb-space-lg grid gap-space-lg md:grid-cols-2">
             {options.map((option, index) => (
               <DateOptionCard
                 key={index}
                 option={option}
                 index={index}
                 action={
-                  <button
+                  <Button
+                    fullWidth
+                    size="sm"
+                    variant={savedIndexes[index] ? "secondary" : "primary"}
                     onClick={() => savePlan(index)}
                     disabled={savedIndexes[index]}
-                    className="w-full px-5 py-3 rounded-full bg-pink-500 hover:bg-pink-400 disabled:bg-emerald-500/30 disabled:text-emerald-100 transition text-sm font-semibold"
                   >
                     {savedIndexes[index] ? "Saved ✓" : "Save this one"}
-                  </button>
+                  </Button>
                 }
               />
             ))}
           </div>
 
           {accessWarning && (
-            <div className="rounded-2xl border border-amber-300/30 bg-amber-500/10 p-4 mb-5">
-              <p className="text-amber-100 text-sm leading-relaxed">
-                These didn&apos;t clearly account for everything you said a
-                date needs to work around. Check them carefully, or generate
-                another pair.
-              </p>
+            <div className="mb-space-md">
+              <AccessWarning />
             </div>
           )}
 
           {errorMessage && (
-            <p className="text-pink-200 text-sm mb-4">{errorMessage}</p>
+            <p role="alert" className="mb-space-md text-body-sm text-error">
+              {errorMessage}
+            </p>
           )}
 
-          <p className="text-white/30 text-xs mb-6">
-            Named places are AI best guesses — worth checking they&apos;re
-            still open before you go.
-          </p>
+          <div className="mb-space-lg">
+            <GeneratedCaveat />
+          </div>
 
-          <button
-            onClick={generate}
-            className="w-full px-6 py-4 rounded-full bg-white/10 hover:bg-white/20 transition"
-          >
+          <Button variant="secondary" fullWidth onClick={generate}>
             Generate another pair
-          </button>
+          </Button>
         </div>
       )}
     </>

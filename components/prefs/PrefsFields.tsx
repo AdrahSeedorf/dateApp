@@ -3,7 +3,7 @@
 import { Lock } from "lucide-react";
 import { ACCESS_NEEDS, type AccessNeeds } from "@/lib/accessNeeds";
 import { AVOID_OPTIONS, INTEREST_GROUPS } from "@/lib/interests";
-import ChipGroup from "@/components/onboarding/ChipGroup";
+import { CheckCard, Chip, ChipGroup, Field, TextArea } from "@/components/ui";
 
 export type PrefsValues = {
   interests: string[];
@@ -31,124 +31,96 @@ export const EMPTY_PREFS: PrefsValues = {
  * but the fields themselves must not drift apart.
  */
 export default function PrefsFields({ values }: { values: PrefsValues }) {
+  const interests = new Set(values.interests);
+  const avoid = new Set(values.avoid);
+
   return (
-    <>
-      <p className="text-white/50 text-sm mb-4 tracking-[0.1em]">
-        THINGS YOU&apos;RE INTO
-      </p>
+    <div className="space-y-space-lg">
+      <div className="space-y-space-md">
+        <p className="text-label-sm text-on-surface-variant tracking-[0.15em]">
+          THINGS YOU&apos;RE INTO
+        </p>
 
-      {INTEREST_GROUPS.map((group) => (
-        <ChipGroup
-          key={group.label}
-          name="interests"
-          legend={group.label}
-          options={group.items}
-          selected={values.interests}
-        />
-      ))}
-
-      <div className="mt-8 mb-2">
-        <label
-          htmlFor="want_to_try"
-          className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-        >
-          ANYTHING YOU&apos;D LIKE TO TRY
-        </label>
-
-        <input
-          id="want_to_try"
-          name="want_to_try"
-          defaultValue={values.wantToTry.join(", ")}
-          placeholder="pottery, kayaking, that new place on the corner"
-          autoComplete="off"
-          className="w-full px-5 py-3 rounded-full border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30"
-        />
+        {INTEREST_GROUPS.map((group) => (
+          <ChipGroup key={group.label} legend={group.label}>
+            {group.items.map((item) => (
+              <Chip
+                key={item}
+                name="interests"
+                value={item}
+                defaultChecked={interests.has(item)}
+              >
+                {item}
+              </Chip>
+            ))}
+          </ChipGroup>
+        ))}
       </div>
 
-      <p className="text-white/50 text-sm mb-3 mt-6 tracking-[0.1em]">
-        THINGS TO AVOID
-      </p>
-
-      <ChipGroup
-        name="avoid"
-        options={AVOID_OPTIONS}
-        selected={values.avoid}
+      <Field
+        id="want_to_try"
+        name="want_to_try"
+        label="Anything you'd like to try"
+        defaultValue={values.wantToTry.join(", ")}
+        placeholder="pottery, kayaking, that new place on the corner"
+        autoComplete="off"
       />
 
-      <fieldset className="border-0 p-0 m-0 mt-8 mb-5">
-        <legend className="text-white/50 text-sm mb-2 tracking-[0.1em]">
+      <ChipGroup legend="Things to avoid">
+        {AVOID_OPTIONS.map((option) => (
+          <Chip
+            key={option}
+            name="avoid"
+            value={option}
+            defaultChecked={avoid.has(option)}
+          >
+            {option}
+          </Chip>
+        ))}
+      </ChipGroup>
+
+      <fieldset className="border-0 p-0 m-0">
+        <legend className="text-label-sm text-on-surface-variant tracking-[0.15em] mb-space-xs">
           ANYTHING A DATE NEEDS TO WORK AROUND
         </legend>
 
-        <p className="text-white/30 text-xs mb-4">
+        <p className="text-body-sm text-on-surface-variant mb-space-md">
           So we never suggest something that doesn&apos;t work for you.
         </p>
 
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid gap-space-sm sm:grid-cols-2">
           {ACCESS_NEEDS.map((need) => (
-            <label
+            <CheckCard
               key={need.key}
-              className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-4 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                name={need.key}
-                defaultChecked={Boolean(values.accessNeeds[need.key])}
-                className="mt-1 accent-pink-500 w-4 h-4 shrink-0"
-              />
-
-              <span>
-                <span className="block text-sm text-white/85">
-                  {need.label}
-                </span>
-                {need.hint && (
-                  <span className="block text-xs text-white/40 mt-0.5">
-                    {need.hint}
-                  </span>
-                )}
-              </span>
-            </label>
+              name={need.key}
+              label={need.label}
+              hint={need.hint}
+              defaultChecked={Boolean(values.accessNeeds[need.key])}
+            />
           ))}
         </div>
       </fieldset>
 
-      <div className="mb-5">
-        <label
-          htmlFor="access_notes"
-          className="block text-white/50 text-sm mb-2 tracking-[0.1em]"
-        >
-          ANYTHING ELSE
-        </label>
+      <TextArea
+        id="access_notes"
+        name="access_notes"
+        label="Anything else"
+        rows={2}
+        defaultValue={values.accessNotes}
+        placeholder="Anything the boxes above don't cover"
+      />
 
-        <textarea
-          id="access_notes"
-          name="access_notes"
-          rows={2}
-          defaultValue={values.accessNotes}
-          placeholder="Anything the boxes above don't cover"
-          className="w-full px-5 py-3 rounded-2xl border border-white/10 bg-white/5 focus:border-pink-300 focus:outline-none text-sm text-white placeholder:text-white/30 resize-none"
-        />
-      </div>
-
-      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 cursor-pointer">
-        <input
-          type="checkbox"
-          name="share_access_with_partner"
-          defaultChecked={values.shareAccessWithPartner}
-          className="mt-1 accent-pink-500 w-4 h-4 shrink-0"
-        />
-
-        <span>
-          <span className="flex items-center gap-2 text-sm text-white/85">
-            <Lock className="w-3.5 h-3.5 text-white/40" aria-hidden />
+      <CheckCard
+        name="share_access_with_partner"
+        defaultChecked={values.shareAccessWithPartner}
+        label={
+          <span className="flex items-center gap-2">
+            <Lock className="h-3.5 w-3.5 text-on-surface-variant" aria-hidden />
             Let your partner see this
           </span>
-          <span className="block text-xs text-white/40 mt-1 leading-relaxed">
-            Off by default. Date ideas account for your needs either way —
-            this only controls whether they can read them.
-          </span>
-        </span>
-      </label>
-    </>
+        }
+        hint="Off by default. Date ideas account for your needs either way — this only controls whether they can read them."
+      />
+    </div>
   );
 }
