@@ -1,13 +1,514 @@
 @import "tailwindcss";
 
-:root {
-  --background: #050510;
-  --foreground: #ffffff;
+/* ==========================================================================
+   Design tokens — "Midnight Romance"
+   Ported from the Stitch export (~/Desktop/personal/stitch/.../midnight_romance/DESIGN.md).
+
+   Two rules govern this file:
+
+   1. Every colour is a CSS variable, never a literal in a component. The
+      couple picks a theme ("Sanctuary Glow") during setup, so the palette has
+      to be swappable at runtime. Hardcoding values into @theme would make
+      that a rewrite later instead of an attribute change.
+
+   2. Where Stitch's values fail accessibility, they are corrected here rather
+      than downstream. Access needs are a hard constraint in this product; a
+      design system that ships unreadable text makes every screen built on it
+      wrong. Corrections are marked A11Y and explained.
+
+   Note: DESIGN.md contradicts itself — the frontmatter tokens and the prose
+   brand section give different palettes (#ffb2bf vs #E892A2 primary, #13121c
+   vs #0B0B14 canvas). The exported HTML uses the frontmatter, so that wins.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Theme: Midnight (default)
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme="midnight"] {
+  --c-primary: #ffb2bf;
+  --c-on-primary: #571b2b;
+  --c-primary-container: #e892a2;
+  --c-on-primary-container: #692a39;
+  --c-primary-fixed: #ffd9de;
+  --c-on-primary-fixed: #3b0616;
+  --c-inverse-primary: #8f4857;
+
+  --c-secondary: #d4bbff;
+  --c-on-secondary: #400688;
+  --c-secondary-container: #582a9f;
+  --c-on-secondary-container: #c6a5ff;
+  --c-secondary-fixed: #ebdcff;
+  --c-on-secondary-fixed: #260058;
+
+  --c-tertiary: #e7c17c;
+  --c-on-tertiary: #412d00;
+  --c-tertiary-container: #c8a563;
+  --c-on-tertiary-container: #523a01;
+  --c-tertiary-fixed: #ffdea4;
+  --c-on-tertiary-fixed: #261900;
+
+  --c-surface: #13121c;
+  --c-surface-dim: #13121c;
+  --c-surface-bright: #393843;
+  --c-surface-container-lowest: #0d0d16;
+  --c-surface-container-low: #1b1b24;
+  --c-surface-container: #1f1f28;
+  --c-surface-container-high: #292933;
+  --c-surface-container-highest: #34343e;
+  --c-surface-variant: #34343e;
+  --c-background: #13121c;
+
+  --c-on-surface: #e4e1ee;
+  --c-on-background: #e4e1ee;
+  --c-on-surface-variant: #d8c1c4;
+  --c-inverse-surface: #e4e1ee;
+  --c-inverse-on-surface: #302f3a;
+
+  --c-outline: #a08c8e;
+  --c-outline-variant: #534345;
+  --c-surface-tint: #ffb2bf;
+
+  /* Glow colours for the ambient radial washes behind content. */
+  --c-glow-a: 255 178 191; /* primary   */
+  --c-glow-b: 212 187 255; /* secondary */
+  --c-glow-c: 231 193 124; /* tertiary  */
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
+/* --------------------------------------------------------------------------
+   Theme: Sunset — warm amber and terracotta over the same midnight canvas.
+   Derived from Midnight by rotating the accent triad; surfaces are unchanged
+   so contrast behaviour stays predictable across themes.
+   -------------------------------------------------------------------------- */
+[data-theme="sunset"] {
+  --c-primary: #ffb59c;
+  --c-on-primary: #5b1c07;
+  --c-primary-container: #e8956f;
+  /* A11Y: darkened from #6d2d12, which measured 4.40:1 against the container. */
+  --c-on-primary-container: #5c2309;
+  --c-primary-fixed: #ffdbcd;
+  --c-on-primary-fixed: #3a0a00;
+  --c-inverse-primary: #92492d;
+
+  --c-secondary: #ffcf8f;
+  --c-on-secondary: #472a00;
+  --c-secondary-container: #663f04;
+  --c-on-secondary-container: #ffddab;
+  --c-secondary-fixed: #ffe6c2;
+  --c-on-secondary-fixed: #2a1800;
+
+  --c-tertiary: #e5bfa4;
+  --c-on-tertiary: #432b1a;
+  --c-tertiary-container: #c39f83;
+  --c-on-tertiary-container: #55392a;
+  --c-tertiary-fixed: #ffdcc4;
+  --c-on-tertiary-fixed: #2a1708;
+
+  --c-surface: #17120f;
+  --c-surface-dim: #17120f;
+  --c-surface-bright: #3e3733;
+  --c-surface-container-lowest: #110d0a;
+  --c-surface-container-low: #201a16;
+  --c-surface-container: #241e1a;
+  --c-surface-container-high: #2f2824;
+  --c-surface-container-highest: #3a332e;
+  --c-surface-variant: #3a332e;
+  --c-background: #17120f;
+
+  --c-on-surface: #efe3dc;
+  --c-on-background: #efe3dc;
+  --c-on-surface-variant: #e3cabb;
+  --c-inverse-surface: #efe3dc;
+  --c-inverse-on-surface: #362f2b;
+
+  --c-outline: #ad9284;
+  --c-outline-variant: #57453b;
+  --c-surface-tint: #ffb59c;
+
+  --c-glow-a: 255 181 156;
+  --c-glow-b: 255 207 143;
+  --c-glow-c: 229 191 164;
+}
+
+/* --------------------------------------------------------------------------
+   Theme: Lavender — violet-forward, the coolest of the four.
+   -------------------------------------------------------------------------- */
+[data-theme="lavender"] {
+  --c-primary: #cdbcff;
+  --c-on-primary: #351a70;
+  --c-primary-container: #a894e8;
+  /* A11Y: darkened from #452a80, which measured 4.25:1 against the container. */
+  --c-on-primary-container: #371f6b;
+  --c-primary-fixed: #e7ddff;
+  --c-on-primary-fixed: #1f0a4d;
+  --c-inverse-primary: #5f4ba0;
+
+  --c-secondary: #a8d8ff;
+  --c-on-secondary: #00344f;
+  --c-secondary-container: #10496b;
+  --c-on-secondary-container: #c4e5ff;
+  --c-secondary-fixed: #d3ecff;
+  --c-on-secondary-fixed: #001e30;
+
+  --c-tertiary: #e4c2e8;
+  --c-on-tertiary: #432a48;
+  --c-tertiary-container: #c2a1c6;
+  --c-on-tertiary-container: #55385a;
+  --c-tertiary-fixed: #ffd9ff;
+  --c-on-tertiary-fixed: #2a1530;
+
+  --c-surface: #14131f;
+  --c-surface-dim: #14131f;
+  --c-surface-bright: #3a3846;
+  --c-surface-container-lowest: #0e0d18;
+  --c-surface-container-low: #1c1b28;
+  --c-surface-container: #201f2c;
+  --c-surface-container-high: #2a2937;
+  --c-surface-container-highest: #353343;
+  --c-surface-variant: #353343;
+  --c-background: #14131f;
+
+  --c-on-surface: #e5e1f0;
+  --c-on-background: #e5e1f0;
+  --c-on-surface-variant: #cdc5e4;
+  --c-inverse-surface: #e5e1f0;
+  --c-inverse-on-surface: #302f3c;
+
+  --c-outline: #968fae;
+  --c-outline-variant: #48445c;
+  --c-surface-tint: #cdbcff;
+
+  --c-glow-a: 205 188 255;
+  --c-glow-b: 168 216 255;
+  --c-glow-c: 228 194 232;
+}
+
+/* --------------------------------------------------------------------------
+   Theme: Starlit — near-monochrome with champagne gold. The quietest option.
+   -------------------------------------------------------------------------- */
+[data-theme="starlit"] {
+  --c-primary: #f2dfb8;
+  --c-on-primary: #3f3116;
+  --c-primary-container: #cdb98f;
+  --c-on-primary-container: #52421f;
+  --c-primary-fixed: #fff0d2;
+  --c-on-primary-fixed: #261c07;
+  --c-inverse-primary: #7a6a48;
+
+  --c-secondary: #d8d5e0;
+  --c-on-secondary: #33313b;
+  --c-secondary-container: #4a4854;
+  --c-on-secondary-container: #e6e3ef;
+  --c-secondary-fixed: #eceaf3;
+  --c-on-secondary-fixed: #1e1c26;
+
+  --c-tertiary: #c7cedd;
+  --c-on-tertiary: #2e3542;
+  --c-tertiary-container: #a5adbd;
+  --c-on-tertiary-container: #3f4654;
+  --c-tertiary-fixed: #dfe6f5;
+  --c-on-tertiary-fixed: #1a202b;
+
+  --c-surface: #101017;
+  --c-surface-dim: #101017;
+  --c-surface-bright: #35353f;
+  --c-surface-container-lowest: #0a0a10;
+  --c-surface-container-low: #18181f;
+  --c-surface-container: #1c1c24;
+  --c-surface-container-high: #26262e;
+  --c-surface-container-highest: #313139;
+  --c-surface-variant: #313139;
+  --c-background: #101017;
+
+  --c-on-surface: #e6e4ec;
+  --c-on-background: #e6e4ec;
+  --c-on-surface-variant: #cfcdd8;
+  --c-inverse-surface: #e6e4ec;
+  --c-inverse-on-surface: #2d2d35;
+
+  --c-outline: #9997a3;
+  --c-outline-variant: #474650;
+  --c-surface-tint: #f2dfb8;
+
+  --c-glow-a: 242 223 184;
+  --c-glow-b: 216 213 224;
+  --c-glow-c: 199 206 221;
+}
+
+/* --------------------------------------------------------------------------
+   Semantic tokens that don't vary by theme.
+   -------------------------------------------------------------------------- */
+:root {
+  --c-error: #ffb4ab;
+  --c-on-error: #690005;
+  --c-error-container: #93000a;
+  --c-on-error-container: #ffdad6;
+
+  /* Glass surfaces — DESIGN.md's elevation model. Layer 1 is static cards,
+     layer 2 is active/floating, layer 3 is pills and sheets. */
+  --glass-1: rgb(255 255 255 / 0.07);
+  --glass-2: rgb(255 255 255 / 0.12);
+  --glass-rim: rgb(255 255 255 / 0.12);
+  --glass-rim-strong: rgb(255 255 255 / 0.18);
+
+  --shadow-glass: 0 8px 32px rgb(0 0 0 / 0.45);
+  --shadow-float: 0 12px 40px rgb(0 0 0 / 0.6), 0 0 24px rgb(var(--c-glow-a) / 0.18);
+  --halo-active: 0 0 28px rgb(var(--c-glow-b) / 0.22);
+}
+
+/* --------------------------------------------------------------------------
+   Tailwind theme registration.
+
+   `@theme inline` matters here: it makes generated utilities emit
+   `var(--c-primary)` rather than baking in the hex. That is what lets a
+   `data-theme` swap on <html> recolour the whole app without a rebuild.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-on-primary: var(--c-on-primary);
+  --color-primary-container: var(--c-primary-container);
+  --color-on-primary-container: var(--c-on-primary-container);
+  --color-primary-fixed: var(--c-primary-fixed);
+  --color-on-primary-fixed: var(--c-on-primary-fixed);
+  --color-inverse-primary: var(--c-inverse-primary);
+
+  --color-secondary: var(--c-secondary);
+  --color-on-secondary: var(--c-on-secondary);
+  --color-secondary-container: var(--c-secondary-container);
+  --color-on-secondary-container: var(--c-on-secondary-container);
+  --color-secondary-fixed: var(--c-secondary-fixed);
+  --color-on-secondary-fixed: var(--c-on-secondary-fixed);
+
+  --color-tertiary: var(--c-tertiary);
+  --color-on-tertiary: var(--c-on-tertiary);
+  --color-tertiary-container: var(--c-tertiary-container);
+  --color-on-tertiary-container: var(--c-on-tertiary-container);
+  --color-tertiary-fixed: var(--c-tertiary-fixed);
+  --color-on-tertiary-fixed: var(--c-on-tertiary-fixed);
+
+  --color-surface: var(--c-surface);
+  --color-surface-dim: var(--c-surface-dim);
+  --color-surface-bright: var(--c-surface-bright);
+  --color-surface-container-lowest: var(--c-surface-container-lowest);
+  --color-surface-container-low: var(--c-surface-container-low);
+  --color-surface-container: var(--c-surface-container);
+  --color-surface-container-high: var(--c-surface-container-high);
+  --color-surface-container-highest: var(--c-surface-container-highest);
+  --color-surface-variant: var(--c-surface-variant);
+  --color-background: var(--c-background);
+
+  --color-on-surface: var(--c-on-surface);
+  --color-on-background: var(--c-on-background);
+  --color-on-surface-variant: var(--c-on-surface-variant);
+  --color-inverse-surface: var(--c-inverse-surface);
+  --color-inverse-on-surface: var(--c-inverse-on-surface);
+
+  --color-outline: var(--c-outline);
+  --color-outline-variant: var(--c-outline-variant);
+  --color-surface-tint: var(--c-surface-tint);
+
+  --color-error: var(--c-error);
+  --color-on-error: var(--c-on-error);
+  --color-error-container: var(--c-error-container);
+  --color-on-error-container: var(--c-on-error-container);
+
+  /* ---- Typography ------------------------------------------------------ */
+  /* --font-playfair / --font-jakarta are injected by next/font in layout.tsx.
+     The literal names stay as a fallback so the system still renders sensibly
+     if a page is ever served outside that layout. */
+  --font-headline: var(--font-playfair), "Playfair Display", ui-serif, Georgia, serif;
+  --font-body: var(--font-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --text-display-lg: 44px;
+  --text-display-lg--line-height: 52px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 600;
+
+  --text-display-lg-mobile: 34px;
+  --text-display-lg-mobile--line-height: 42px;
+  --text-display-lg-mobile--letter-spacing: -0.015em;
+  --text-display-lg-mobile--font-weight: 600;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 500;
+
+  --text-headline-md: 26px;
+  --text-headline-md--line-height: 34px;
+  --text-headline-md--letter-spacing: -0.005em;
+  --text-headline-md--font-weight: 500;
+
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--font-weight: 500;
+
+  --text-title-lg: 18px;
+  --text-title-lg--line-height: 26px;
+  --text-title-lg--letter-spacing: -0.01em;
+  --text-title-lg--font-weight: 600;
+
+  --text-title-md: 16px;
+  --text-title-md--line-height: 24px;
+  --text-title-md--font-weight: 600;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 22px;
+  --text-body-md--font-weight: 400;
+
+  /* A11Y: Stitch sets body-sm to 13px. Raised to 14px — 13px is below what
+     is comfortable for sustained reading, and body-sm is used for captions
+     and helper text that people actually need to read. */
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-lg--letter-spacing: 0.01em;
+  --text-label-lg--font-weight: 600;
+
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.03em;
+  --text-label-md--font-weight: 600;
+
+  /* A11Y: Stitch sets label-sm to 11px/500. Raised to 12px and weight 600.
+     11px is below the practical floor for a dark UI, and these are the
+     timestamps, counts and status pills that carry real information. */
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--letter-spacing: 0.04em;
+  --text-label-sm--font-weight: 600;
+
+  /* ---- Shape ----------------------------------------------------------- */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  /* ---- Spacing --------------------------------------------------------- */
+  --spacing-gutter: 1rem;
+  --spacing-gutter-mobile: 0.75rem;
+  --spacing-margin: 1.5rem;
+  --spacing-margin-mobile: 1.25rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  html {
+    background-color: var(--c-background);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    background-color: var(--c-background);
+    color: var(--c-on-background);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* DESIGN.md asks for genuine italic glyphs on editorial emphasis, never
+     synthesised ones. Playfair Display ships a true italic; this keeps the
+     browser from faking it if the italic face hasn't loaded yet. */
+  em,
+  i {
+    font-synthesis-style: none;
+  }
+
+  /* A11Y: a visible focus ring on every interactive element. Stitch's spec
+     describes hover and press states but never focus, which would leave the
+     app unusable by keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* A11Y: honour reduced-motion. The design leans on pulsing glows, springy
+     hearts and particle bursts; all of that is decoration and none of it
+     should play for someone who has asked the OS to stop animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Utilities used often enough to deserve a name.
+   -------------------------------------------------------------------------- */
+@layer utilities {
+  /* Safe areas — the design floats a bottom nav above the home indicator. */
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 12px);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  }
+
+  /* Layer 1: static frosted card. */
+  .glass {
+    background: var(--glass-1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-rim);
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* Layer 2: raised / interactive. */
+  .glass-raised {
+    background: var(--glass-2);
+    backdrop-filter: blur(36px);
+    -webkit-backdrop-filter: blur(36px);
+    border: 1px solid var(--glass-rim-strong);
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* Layer 3: floating pills, tooltips, sheets. */
+  .glass-float {
+    background: var(--glass-2);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid var(--glass-rim-strong);
+    box-shadow: var(--shadow-float);
+  }
+
+  /* The ambient off-screen radial washes behind page content. Purely
+     decorative, so it is hidden from assistive technology at the usage site. */
+  .ambient-glow {
+    background-image:
+      radial-gradient(60rem 40rem at 8% -10%, rgb(var(--c-glow-a) / 0.1), transparent 60%),
+      radial-gradient(50rem 40rem at 105% 35%, rgb(var(--c-glow-b) / 0.1), transparent 60%),
+      radial-gradient(45rem 35rem at 25% 108%, rgb(var(--c-glow-c) / 0.1), transparent 60%);
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }

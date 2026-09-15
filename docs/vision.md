@@ -581,3 +581,174 @@ verifiable rather than a big-bang branch.
 Date lifecycle and outcomes → ratings → categories → the next-day "how did
 it go?" nudge → on-this-day resurfacing → rituals and trivia → in-app
 sharing of plans.
+
+---
+
+## Stitch design system — triage and fit (2026-09-15)
+
+A full Google Stitch project ("Our Journey — AI Companion UX") was exported:
+34 coded screens, 16 generated image assets, and a `DESIGN.md` carrying a
+complete design system. Source lives outside this repo, in `~/Desktop/personal/stitch/`.
+
+This section records what we adopt, what we defer, what we refuse, and where
+each piece lands relative to what is already built.
+
+### What already exists (the baseline this plugs into)
+
+| Area | Built |
+|---|---|
+| Auth | Magic link, invite redemption (`/join`), dev login |
+| Onboarding | 6 steps, path-aware (creator vs partner), resumable |
+| Preferences | Interest chips, want-to-try, avoid, structured access needs |
+| Profile | Four independently-saving sections, incl. email change |
+| Date generation | `/api/generate-date`, prefs-aware, access needs as hard constraints |
+| Memories | List, detail, create, media upload to private bucket |
+| Data | `couples`, `profiles`, `profile_prefs`, `invites`, `date_plans`, `memories`, `memory_media` |
+| Styling | Ad-hoc Tailwind, pink-on-purple radial gradient, no token layer |
+
+Nothing above gets thrown away. The Stitch work is a restyle plus new
+surfaces, not a rewrite.
+
+### Decision: the design system is adopted
+
+`DESIGN.md` frontmatter is the source of truth for tokens — it matches the
+exported HTML. The prose brand section disagrees with it (`#E892A2` vs
+`#ffb2bf` primary, `#0B0B14` vs `#13121c` canvas); the prose is treated as
+mood reference only.
+
+Two deliberate deviations from Stitch:
+
+- **Tokens become CSS variables, not hardcoded Tailwind config values.**
+  The onboarding design offers four themes ("Sanctuary Glow": Midnight,
+  Sunset, Lavender, Starlit). Theming has to exist in the token layer from
+  day one; retrofitting it later means touching every component.
+- **Accessibility fixes applied at adoption.** `label-sm` at 11px is too
+  small for body-adjacent use, and the prose's "Ghost Subtle"
+  (`rgba(161,158,183,0.4)`) fails contrast outright. Accessibility is a hard
+  constraint in this product, so the system is corrected as it is ported,
+  not after.
+
+### Decision: long distance is a supported mode, not the premise
+
+Roughly a third of the Stitch project is a transatlantic fiction (Sarah in
+Brooklyn, Leo in Positano). Co-located stays the default — it is what V1 is,
+and the larger case. Long distance switches on, largely inferable from the
+two profiles' locations rather than asked.
+
+A mode changes questions, not just pixels:
+
+- Generation must produce something two people can do apart — a synchronised
+  film, a cook-along, a call with structure — not "drive to the river".
+- Memories become two halves of a day rather than one shared moment.
+- Days-apart counters, timezone strips and reunion countdowns replace
+  proximity-based cards.
+
+It also rescues the hardware pages: the emotional payload of the heartbeat
+sync is reachable with sealed letters, async whispers and countdowns, with
+no wearable involved.
+
+### Decision: the encryption claim is corrected, not honoured
+
+Stitch labels several surfaces "Private & Encrypted", "End-to-End Encrypted
+Vault", "end-to-end encrypted relational sanctuary". This is false of what we
+have built. Data is encrypted in transit and at rest by Supabase, and RLS
+keeps other couples out, but the server can read everything.
+
+Real E2E would break the date generator (server-side preference reads),
+search, and every AI feature touching memories. We are not paying that price.
+
+**Copy is corrected instead**: "Private to the two of you", and for letters,
+"Sealed & Locked" — because the lock genuinely is enforceable (see below)
+even though the encryption is not.
+
+### Decision: no relationship score
+
+The Statistics screen proposes "98% Vitality" and a personality label. A
+number that grades a relationship will eventually fall, and someone will see
+it fall during a bad week. Counts only go up and are safe — days together,
+keepsakes, milestones. A score is a different object and is refused.
+Retrospectives, yes. Grades, no.
+
+### Triage
+
+**Build now — designed, buildable, no external dependency**
+
+| Feature | Stitch screens | Fit |
+|---|---|---|
+| Design system + theming | `DESIGN.md` | New token layer; restyle existing screens |
+| Time-capsule letters | Vault, Compose (wax seal), Sealed/sent, Unseal ceremony | New `letters` table + RLS time-lock |
+| Milestones timeline | Milestones & Timeline (mobile + desktop) | New `milestones` table; `started_at` is the anchor milestone |
+| Home dashboard | Home Dashboard | Replaces `/home`; all data already exists |
+| Richer memories | Memory Vault & Story | Extends `memories`: cover, coords, weather-at-capture, favourite, category |
+| Reflections on memories | Memory Vault & Story | New `memory_reflections`, per-person, some private |
+| Couple profile setup | Create Couple Profile | Adds couple-level onboarding step: cover, stage, anniversary, theme, first memory |
+| Per-generation controls | AI Date Planner | Vibe / time window / tier / surprise — per-request, distinct from stored prefs |
+| Nudge + Echo | Home Dashboard | One-tap affection; the cheapest real messaging primitive |
+| Bucket list | Bucket List / Shared Dreams | New `wishlists`; links to future milestones |
+| Shared journal | Shared Journal | Extends reflections |
+
+**Build later — needs an external dependency or meaningful cost**
+
+| Feature | Blocked on |
+|---|---|
+| Multi-stop itineraries | Places API to verify venues exist, are open, and real walk times |
+| Weather | Weather API (cheap, but a key and a budget) |
+| Maps / Couple Footsteps | Maps provider and tile costs |
+| Voice whispers | Audio recording, storage, playback — extends `memory_media` |
+| Soundtracks | Spotify/Apple embed SDK; self-hosting recordings is not licensable |
+| Partner presence | Self-set status only, opt-in; never inferred location |
+| Story Mode playback | Depends on rich memories landing first |
+| Print ordering | A fulfilment partner, payments, addresses — a business, not a button |
+
+**Refused**
+
+- Relationship scoring (above).
+- Live heart rate, haptic flutter, thermal pillow, paired bracelets — no
+  hardware layer is coming.
+- Live camera feeds between partners — a consent model we have not designed
+  and do not want to.
+- "Booked ✓ / confirmed under Leo's name" — the app cannot book. Until a
+  reservation integration exists this reads "Reservation recommended" with a
+  call link. A fake confirmation sends a couple to a restaurant with no table.
+
+### Why letters go first
+
+Best idea in the set, fully designed across four screens, zero external
+dependencies — and the only place where a promise in the UI can be made
+literally true. A row-level policy hiding the body from the recipient until
+`unlock_at <= now()` is real enforcement: the recipient cannot read it early
+even by calling the API directly. The author still can. The feature dies if
+anyone discovers they can peek, so the lock belongs in the database, not in
+the client.
+
+Trigger types are not all date-based. "On tough days" is event-triggered —
+written in advance, held indefinitely, released when the recipient asks for
+one. That is the most original thing in the whole export.
+
+### Work breakdown — design system and new surfaces (2026-09-15)
+
+Ordered by dependency. Each is independently shippable.
+
+| # | Task | Notes |
+|---|---|---|
+| 1 | Token layer + theming | CSS variables from `DESIGN.md`, 4 themes, fonts, a11y corrections |
+| 2 | Shared UI primitives | Glass card, button tiers, chips, inputs, timeline stem, bottom nav |
+| 3 | Restyle existing screens | Onboarding, profile, memories, dates onto the new system |
+| 4 | Letters schema + time-lock | `letters` table, RLS enforcing `unlock_at`, unit-tested |
+| 5 | Letters UI | Vault, compose, sealed confirmation, unseal ceremony |
+| 6 | Milestones schema + timeline | Past and future on one spine; chapter changes create milestones |
+| 7 | Home dashboard | New `/home`, incl. a deliberately designed day-one empty state |
+| 8 | Richer memories | Cover, category, favourite, coords, reflections |
+| 9 | Couple profile step | Cover art, relationship stage, anniversary, theme, founding memory |
+| 10 | Per-generation controls | Vibe, time window, tier, surprise factor |
+| 11 | Nudge + Echo | One-tap affection with partner notification |
+| 12 | LDR mode | Detection, generation branch, distance-aware surfaces |
+
+### The gap Stitch will never design
+
+Every mockup is drawn at 1,238 days and 142 keepsakes. The real first user
+opens the app at day one: no partner yet, no memories, no dates, an empty
+ring. That screen decides whether anyone stays, and it has to be designed
+deliberately rather than falling out as a degraded version of the full one.
+The founding-memory question in couple setup exists partly to make sure the
+vault is never empty on first view.
