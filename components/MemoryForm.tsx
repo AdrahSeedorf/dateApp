@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Card, Field, TextArea } from "@/components/ui";
 import { Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import {
-  MEDIA_BUCKET,
-  mediaTypeFor,
-  safeFileName,
-  type MediaType,
-} from "@/lib/memories";
+import { CATEGORY_SUGGESTIONS, MEDIA_BUCKET, mediaTypeFor, safeFileName, type MediaType } from "@/lib/memories";
 
 type Props = {
   coupleId: string;
@@ -39,6 +34,7 @@ export default function MemoryForm({
   const [description, setDescription] = useState("");
   const [memoryDate, setMemoryDate] = useState("");
   const [location, setLocation] = useState(initialLocation);
+  const [category, setCategory] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
 
   const [saving, setSaving] = useState(false);
@@ -101,6 +97,7 @@ export default function MemoryForm({
         description: description.trim() || null,
         memory_date: memoryDate || null,
         location: location.trim() || null,
+        category: category.trim() || null,
       })
       .select("id")
       .single();
@@ -183,6 +180,25 @@ export default function MemoryForm({
             placeholder="Penrith"
           />
         </div>
+
+        {/* A datalist rather than a select: the suggestions are a starting
+            point, and a couple's own category ("the Tuesday ones") is worth
+            more to them than anything I could put in a fixed list. */}
+        <Field
+          id="category"
+          label="Category (optional)"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="Trips & escapes"
+          list="memory-categories"
+          hint="Used to group the vault. Make up your own if none fit."
+        />
+
+        <datalist id="memory-categories">
+          {CATEGORY_SUGGESTIONS.map((suggestion) => (
+            <option key={suggestion} value={suggestion} />
+          ))}
+        </datalist>
 
         <TextArea
           id="description"

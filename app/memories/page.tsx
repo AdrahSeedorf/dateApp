@@ -1,19 +1,29 @@
 import Link from "next/link";
 
-import { ImageIcon, MapPin, Plus } from "lucide-react";
+import { ImageIcon, MapPin, Plus, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
-import { formatMemoryDate, signPaths, type Memory } from "@/lib/memories";
-import { Button, Card, Screen, ScreenHeader } from "@/components/ui";
+import {
+  coverPathFor,
+  formatMemoryDate,
+  signPaths,
+  type Memory,
+} from "@/lib/memories";
+import { Button, Card, Pill, Screen, ScreenHeader, cn } from "@/components/ui";
 
-export default async function MemoriesPage() {
+type Props = {
+  searchParams: Promise<{ filter?: string }>;
+};
+
+export default async function MemoriesPage({ searchParams }: Props) {
+  const { filter } = await searchParams;
   await requireOnboarded();
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("memories")
     .select(
-      "id, title, description, memory_date, location, created_at, memory_media(storage_path, media_type)"
+      "id, title, description, memory_date, location, category, is_favourite, cover_media_id, created_at, memory_media(id, storage_path, media_type)"
     )
     .order("memory_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -22,19 +32,46 @@ export default async function MemoriesPage() {
     console.error("[memories] list query failed", error.message);
   }
 
-  const memories = (data ?? []) as Memory[];
+  const all = (data ?? []) as Memory[];
 
-  // One signed URL per memory is enough for the grid — first image if there
-  // is one, otherwise nothing.
+  // Filters are built from the categories actually in use rather than a fixed
+  // list, so a couple's own vocabulary is what they get to filter by.
+  const categories = [...new Set(all.map((m) => m.category).filter(Boolean))]
+    .sort() as string[];
+
+  const hasFavourites = all.some((m) => m.is_favourite);
+
+  const memories =
+    filter === "favourites"
+      ? all.filter((m) => m.is_favourite)
+      : filter
+        ? all.filter((m) => m.category === filter)
+        : all;
+
+  // One signed URL per memory is enough for the grid.
   const coverPaths = memories
-    .map(
-      (memory) =>
-        memory.memory_media?.find((m) => m.media_type === "image")
-          ?.storage_path
-    )
+    .map(coverPathFor)
     .filter((path): path is string => Boolean(path));
 
   const signed = await signPaths(supabase, coverPaths);
+
+  const filters = [
+    { key: "", label: "All", href: "/memories" },
+    ...(hasFavourites
+      ? [
+          {
+            key: "favourites",
+            label: "Favourites",
+            href: "/memories?filter=favourites",
+          },
+        ]
+      : []),
+    ...categories.map((category) => ({
+      key: category,
+      label: category,
+      href: `/memories?filter=${encodeURIComponent(category)}`,
+    })),
+  ];
 
   return (
     <Screen withNav className="mx-auto max-w-5xl">
@@ -60,7 +97,48 @@ export default async function MemoriesPage() {
         }
       />
 
-      {memories.length === 0 ? (
+      {/* Real links rather than client-side state: filters survive a refresh,
+          can be shared, and work before hydration. */}
+      {filters.length > 1 && (
+        <nav aria-label="Filter memories" className="mb-space-lg">
+          <ul className="flex gap-space-sm overflow-x-auto scrollbar-none pb-1">
+            {filters.map((option) => {
+              const active = (filter ?? "") === option.key;
+
+              return (
+                <li key={option.key || "all"} className="shrink-0">
+                  <Link
+                    href={option.href}
+                    aria-current={active ? "true" : undefined}
+                    className={cn(
+                      "block min-h-[44px] rounded-full border px-4 py-2 text-label-md transition",
+                      active
+                        ? "border-primary bg-[rgb(var(--c-glow-a)/0.18)] text-on-surface font-semibold"
+                        : "border-[var(--glass-rim)] bg-[var(--glass-1)] text-on-surface-variant hover:text-on-surface"
+                    )}
+                  >
+                    {option.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
+
+      {memories.length === 0 && filter ? (
+        <Card className="p-12 text-center">
+          <h2 className="mb-space-sm font-headline text-headline-sm text-on-surface">
+            Nothing in here
+          </h2>
+          <p className="mb-space-lg text-body-md text-on-surface-variant">
+            No memories match that filter yet.
+          </p>
+          <Button href="/memories" size="sm" variant="secondary">
+            Show everything
+          </Button>
+        </Card>
+      ) : memories.length === 0 ? (
         <Card className="p-12 text-center">
           <ImageIcon
             className="mx-auto mb-space-md h-10 w-10 text-primary/60"
@@ -80,9 +158,7 @@ export default async function MemoriesPage() {
       ) : (
         <div className="grid gap-space-lg sm:grid-cols-2 lg:grid-cols-3">
           {memories.map((memory) => {
-            const cover = memory.memory_media?.find(
-              (m) => m.media_type === "image"
-            )?.storage_path;
+            const cover = coverPathFor(memory);
             const coverUrl = cover ? signed[cover] : undefined;
             const mediaCount = memory.memory_media?.length ?? 0;
 
@@ -115,9 +191,21 @@ export default async function MemoriesPage() {
                 </div>
 
                 <div className="p-space-lg">
-                  <h2 className="text-title-md text-on-surface mb-space-xs line-clamp-1">
-                    {memory.title}
+                  <h2 className="text-title-md text-on-surface mb-space-xs flex items-center gap-2">
+                    {memory.is_favourite && (
+                      <Star
+                        className="h-3.5 w-3.5 shrink-0 fill-tertiary text-tertiary"
+                        aria-label="Favourite"
+                      />
+                    )}
+                    <span className="line-clamp-1">{memory.title}</span>
                   </h2>
+
+                  {memory.category && (
+                    <Pill tone="secondary" className="mb-space-xs">
+                      {memory.category}
+                    </Pill>
+                  )}
 
                   <p className="text-label-sm text-on-surface-variant mb-space-xs">
                     {formatMemoryDate(memory.memory_date)}
