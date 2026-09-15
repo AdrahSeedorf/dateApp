@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isStage, safeTheme } from "@/lib/coupleProfile";
+import { isDistanceMode } from "@/lib/distance";
 import { getSessionProfile } from "@/lib/auth";
 import { ACCESS_NEEDS, type AccessNeeds } from "@/lib/accessNeeds";
 import { ALL_INTERESTS, AVOID_OPTIONS, keepKnown } from "@/lib/interests";
@@ -113,10 +114,19 @@ export async function saveCouple(
   const startedAt = String(formData.get("started_at") ?? "").trim();
   const stage = String(formData.get("stage") ?? "");
   const theme = safeTheme(formData.get("theme"));
+  const rawMode = String(formData.get("distance_mode") ?? "");
+  const reunionOn = String(formData.get("reunion_on") ?? "").trim();
+  const timezone = String(formData.get("timezone") ?? "").trim();
 
   if (startedAt && !/^\d{4}-\d{2}-\d{2}$/.test(startedAt)) {
     return { error: "That date didn't make sense." };
   }
+
+  if (reunionOn && !/^\d{4}-\d{2}-\d{2}$/.test(reunionOn)) {
+    return { error: "That reunion date didn't make sense." };
+  }
+
+  const apart = rawMode === "apart";
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -126,12 +136,33 @@ export async function saveCouple(
       started_at: startedAt || null,
       stage: isStage(stage) ? stage : null,
       theme,
+      // An unrecognised value means the radio was never touched, which is
+      // "still unanswered" rather than "they live together".
+      distance_mode: isDistanceMode(rawMode) ? rawMode : "auto",
+      // Clearing the reunion date when they're together again is the point,
+      // not an omission — a stale countdown to a trip that already happened
+      // is worse than none.
+      reunion_on: apart && reunionOn ? reunionOn : null,
     })
     .eq("id", session.coupleId);
 
   if (error) {
     console.error("[profile] couple save failed", error.message);
     return { error: "Couldn't save that. Try again." };
+  }
+
+  // Recorded on the person, not the couple: it's where *you* are.
+  // Only written when there's something to write, so a browser that refuses
+  // to report a zone doesn't wipe one saved earlier from another device.
+  if (apart && timezone) {
+    const { error: zoneError } = await supabase
+      .from("profiles")
+      .update({ timezone })
+      .eq("id", session.userId);
+
+    if (zoneError) {
+      console.error("[profile] timezone save failed", zoneError.message);
+    }
   }
 
   // The theme lives on <html>, which the root layout renders, so every route

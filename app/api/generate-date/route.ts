@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCoupleContext } from "@/lib/coupleContext";
 import { stageGuidance } from "@/lib/coupleProfile";
 import { surpriseGuidance } from "@/lib/dateIdeas";
+import { APART_GUIDANCE } from "@/lib/distance";
 import { ACCESS_NEEDS, type AccessNeedKey } from "@/lib/accessNeeds";
 
 type GenerateDateRequest = {
@@ -180,7 +181,14 @@ export async function POST(request: Request) {
       : "",
   ].filter(Boolean);
 
-  const systemPrompt = BASE_PROMPT + accessSection(needs) + schema(needs);
+  // Appended after the base prompt so its restrictions override the default
+  // instruction to ground plans in nearby named places — which is exactly
+  // the advice that's useless to two people on different continents.
+  const systemPrompt =
+    BASE_PROMPT +
+    (context.apart ? `\n\n${APART_GUIDANCE}` : "") +
+    accessSection(needs) +
+    schema(needs);
 
   const userMessage = [
     `Location: ${location}.`,
@@ -188,7 +196,9 @@ export async function POST(request: Request) {
     timeWindow?.trim() ? `When: ${timeWindow.trim()}.` : "",
     ...preferenceLines,
     trimmedNote ? `Personal note from the planner: "${trimmedNote}"` : "",
-    "Suggest two distinct, decisive date options grounded in real, named places near this location.",
+    context.apart
+      ? "Suggest two distinct, decisive things they can do together while apart."
+      : "Suggest two distinct, decisive date options grounded in real, named places near this location.",
   ]
     .filter(Boolean)
     .join(" ");

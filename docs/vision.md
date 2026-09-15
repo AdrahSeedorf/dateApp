@@ -647,6 +647,23 @@ It also rescues the hardware pages: the emotional payload of the heartbeat
 sync is reachable with sealed letters, async whispers and countdowns, with
 no wearable involved.
 
+**Revised on build (2026-09-15).** This section said the mode would be
+"largely inferable from the two profiles' locations rather than asked". That
+turned out to be optimistic. Locations are free text: "Penrith" and
+"Penrith, NSW" are one place and compare as different, while two
+Springfields are not. Real distance needs geocoding, which the triage
+already placed in build-later.
+
+So the shipped behaviour is narrower and honest: differing location text
+*suggests* the mode on the dashboard, and a person decides. The stored value
+has three states rather than two — `auto` (unanswered), `together`, `apart`
+— because "nobody has said" and "they live together" want different
+treatment, and collapsing them would mean never being able to ask.
+
+Timezones are asked of the browser rather than derived from the town, since
+`Intl.DateTimeFormat().resolvedOptions().timeZone` knows exactly and a
+free-text guess would be worse than a question answered correctly once.
+
 ### Decision: the encryption claim is corrected, not honoured
 
 Stitch labels several surfaces "Private & Encrypted", "End-to-End Encrypted

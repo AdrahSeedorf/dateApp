@@ -19,9 +19,19 @@ import {
 } from "@/lib/milestones";
 import { coverPathFor, signPaths, type Memory } from "@/lib/memories";
 import { latestNudge, timeAgo } from "@/lib/nudges";
+import {
+  dayDifference,
+  daysUntilReunion,
+  describeDayDifference,
+  describeReunion,
+  isApart,
+  localTime,
+  locationsLookDifferent,
+} from "@/lib/distance";
 import ChapterCard from "@/components/home/ChapterCard";
 import FirstSteps, { type Step } from "@/components/home/FirstSteps";
 import NudgeCard from "@/components/home/NudgeCard";
+import DistanceCard from "@/components/home/DistanceCard";
 import {
   Card,
   Pill,
@@ -57,7 +67,7 @@ export default async function HomePage() {
       getPartner(supabase, session.userId, session.coupleId),
       supabase
         .from("couples")
-        .select("name, started_at")
+        .select("name, started_at, distance_mode, reunion_on")
         .eq("id", session.coupleId)
         .maybeSingle(),
       listLetters(supabase),
@@ -65,6 +75,37 @@ export default async function HomePage() {
     ]);
 
   const nudge = await latestNudge(supabase);
+
+  const apart = isApart(couple?.distance_mode);
+
+  // Fetched when the mode is on *or* still unanswered: the suggestion below
+  // compares the two locations, so gating this on `apart` alone would mean
+  // the prompt could never fire and the mode could never be discovered.
+  //
+  // Zones come from the browser at sign-up, so either can be missing on an
+  // account that predates the field. Every helper below returns null rather
+  // than guessing.
+  const needsLocations = apart || couple?.distance_mode === "auto";
+
+  const { data: zones } = needsLocations
+    ? await supabase
+        .from("profiles")
+        .select("id, timezone, location")
+        .eq("couple_id", session.coupleId)
+    : { data: null };
+
+  const mine = zones?.find((z) => z.id === session.userId) ?? null;
+  const theirs = zones?.find((z) => z.id !== session.userId) ?? null;
+
+  // Only a prompt, never a setting — comparing free text isn't a distance
+  // calculation. See lib/distance.ts.
+  const suggestApart =
+    couple?.distance_mode === "auto" &&
+    Boolean(partner) &&
+    locationsLookDifferent(
+      session.location,
+      (theirs?.location as string | null) ?? null
+    );
 
   const [{ data: recentMemories }, { count: memoryCount }, { count: planCount }] =
     await Promise.all([
@@ -199,6 +240,37 @@ export default async function HomePage() {
       </header>
 
       <FirstSteps steps={steps} />
+
+      {apart && partner && (
+        <DistanceCard
+          partnerName={partner.displayName ?? "them"}
+          yourTime={localTime(mine?.timezone ?? null)}
+          theirTime={localTime(theirs?.timezone ?? null)}
+          dayNote={describeDayDifference(
+            dayDifference(mine?.timezone ?? null, theirs?.timezone ?? null)
+          )}
+          reunionLabel={describeReunion(
+            daysUntilReunion(couple?.reunion_on ?? null)
+          )}
+        />
+      )}
+
+      {suggestApart && (
+        <Card
+          as={Link}
+          href="/profile"
+          elevation="flat"
+          className="mb-space-lg block p-space-lg transition hover:border-primary/50"
+        >
+          <p className="text-body-md text-on-surface">
+            You two seem to be in different places.
+          </p>
+          <p className="mt-space-xs text-body-sm text-on-surface-variant">
+            Turn on long-distance mode and date ideas become things you can do
+            apart, with both your local times on this screen.
+          </p>
+        </Card>
+      )}
 
       {/* Only with a partner: "send them something" with nobody there would
           be a small cruelty on an already-empty screen. */}

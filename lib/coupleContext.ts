@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
+import { isApart } from "@/lib/distance";
 import {
   ACCESS_NEEDS,
   parseAccessNeeds,
@@ -18,6 +19,8 @@ export type CoupleContext = {
   accessNotes: string[];
   /** Where the relationship is now. Shapes what kind of plan suits them. */
   stage: string | null;
+  /** True when they can't be in the same room — changes everything. */
+  apart: boolean;
 };
 
 type PrefRow = {
@@ -58,6 +61,7 @@ export async function getCoupleContext(): Promise<CoupleContext | null> {
     visibleAccessNeeds: [],
     accessNotes: [],
     stage: null,
+    apart: false,
   };
 
   if (!session.coupleId) return empty;
@@ -68,15 +72,16 @@ export async function getCoupleContext(): Promise<CoupleContext | null> {
     supabase.from("profiles").select("id").eq("couple_id", session.coupleId),
     supabase
       .from("couples")
-      .select("stage")
+      .select("stage, distance_mode")
       .eq("id", session.coupleId)
       .maybeSingle(),
   ]);
 
   const stage = (couple?.stage as string | null) ?? null;
+  const apart = isApart(couple?.distance_mode);
 
   const memberIds = (members ?? []).map((m) => m.id as string);
-  if (memberIds.length === 0) return { ...empty, stage };
+  if (memberIds.length === 0) return { ...empty, stage, apart };
 
   // Service role: a partner's private preferences are unreadable through RLS
   // by design, but generation still has to account for them.
@@ -90,7 +95,7 @@ export async function getCoupleContext(): Promise<CoupleContext | null> {
 
   if (error) {
     console.error("[couple-context] prefs lookup failed", error.message);
-    return { ...empty, stage };
+    return { ...empty, stage, apart };
   }
 
   const rows = (data ?? []) as PrefRow[];
@@ -131,5 +136,6 @@ export async function getCoupleContext(): Promise<CoupleContext | null> {
     visibleAccessNeeds: [...visibleNeeds],
     accessNotes: notes,
     stage,
+    apart,
   };
 }

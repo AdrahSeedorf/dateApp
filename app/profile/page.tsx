@@ -6,6 +6,8 @@ import PrefsFields, { type PrefsValues } from "@/components/prefs/PrefsFields";
 import SaveableForm from "@/components/profile/SaveableForm";
 import CoupleFields from "@/components/couple/CoupleFields";
 import { isStage, safeTheme } from "@/lib/coupleProfile";
+import { isDistanceMode } from "@/lib/distance";
+import DistanceFields from "@/components/couple/DistanceFields";
 import { Field, Screen, ScreenHeader } from "@/components/ui";
 import {
   changeEmail,
@@ -38,10 +40,18 @@ export default async function ProfilePage() {
   const { data: couple } = session.coupleId
     ? await supabase
         .from("couples")
-        .select("name, started_at, stage, theme")
+        .select("name, started_at, stage, theme, distance_mode, reunion_on")
         .eq("id", session.coupleId)
         .maybeSingle()
     : { data: null };
+
+  const { data: ownProfile } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", session.userId)
+    .maybeSingle();
+
+  const ownTimezone = (ownProfile?.timezone as string | null) ?? null;
 
   const { data: partner } = session.coupleId
     ? await supabase
@@ -113,6 +123,18 @@ export default async function ProfilePage() {
                 theme: safeTheme(couple?.theme),
               }}
             />
+
+            <div className="mt-space-lg border-t border-[var(--glass-rim)] pt-space-lg">
+              <DistanceFields
+                mode={
+                  isDistanceMode(couple?.distance_mode)
+                    ? couple.distance_mode
+                    : "auto"
+                }
+                reunionOn={couple?.reunion_on ?? ""}
+                timezone={ownTimezone}
+              />
+            </div>
           </SaveableForm>
         )}
 
