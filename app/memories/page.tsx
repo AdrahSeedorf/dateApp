@@ -37,7 +37,7 @@ export default async function MemoriesPage() {
   const signed = await signPaths(supabase, coverPaths);
 
   return (
-    <Screen className="mx-auto max-w-5xl">
+    <Screen withNav className="mx-auto max-w-5xl">
       <Link
         href="/home"
         className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"

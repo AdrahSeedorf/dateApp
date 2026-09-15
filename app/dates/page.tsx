@@ -34,7 +34,7 @@ export default async function DatesPage() {
   const savedPlans = (plans ?? []) as SavedPlan[];
 
   return (
-    <Screen className="mx-auto max-w-3xl">
+    <Screen withNav className="mx-auto max-w-3xl">
       <Link
         href="/home"
         className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"

@@ -1,9 +1,18 @@
 import { type ReactNode } from "react";
+import BottomNav from "./BottomNav";
 import { cn } from "./cn";
 
 type Props = {
   children: ReactNode;
-  /** Leaves room for the floating bottom nav. */
+  /**
+   * Renders the floating bottom nav and leaves room for it.
+   *
+   * One flag rather than a flag plus a separate `<BottomNav />` in every
+   * page: those two can drift, and the failure is a nav floating over the
+   * last paragraph or a gap at the bottom of a screen with no nav. Set it on
+   * top-level destinations; leave it off detail and compose pages, where the
+   * nav would compete with "← back".
+   */
   withNav?: boolean;
   /** Centres a narrow column — onboarding, login, single-question steps. */
   narrow?: boolean;
@@ -40,6 +49,8 @@ export default function Screen({
       >
         {children}
       </main>
+
+      {withNav && <BottomNav />}
     </div>
   );
 }
