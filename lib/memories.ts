@@ -8,6 +8,8 @@ export type MemoryMedia = {
   id?: string;
   storage_path: string;
   media_type: MediaType;
+  /** The chosen cover, if one has been picked. At most one per memory. */
+  is_cover?: boolean;
 };
 
 export type Memory = {
@@ -18,7 +20,6 @@ export type Memory = {
   location: string | null;
   category?: string | null;
   is_favourite?: boolean;
-  cover_media_id?: string | null;
   created_at: string;
   memory_media?: MemoryMedia[];
 };
@@ -54,14 +55,16 @@ export const CATEGORY_SUGGESTIONS = [
  * Prefers the chosen cover. Falls back to the first image, which is what
  * this used to do implicitly — the difference now is that adding a photo
  * can't silently change the cover of a memory somebody already set.
+ *
+ * The flag is on the media row rather than a `cover_media_id` on the memory.
+ * See migration 0011: pointing the other way created a second foreign key
+ * between the two tables and PostgREST then refused every embed.
  */
 export function coverPathFor(memory: Memory): string | undefined {
   const media = memory.memory_media ?? [];
 
-  if (memory.cover_media_id) {
-    const chosen = media.find((m) => m.id === memory.cover_media_id);
-    if (chosen) return chosen.storage_path;
-  }
+  const chosen = media.find((m) => m.is_cover && m.media_type === "image");
+  if (chosen) return chosen.storage_path;
 
   return media.find((m) => m.media_type === "image")?.storage_path;
 }

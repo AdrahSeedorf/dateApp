@@ -112,7 +112,7 @@ export default async function HomePage() {
       supabase
         .from("memories")
         .select(
-          "id, title, memory_date, cover_media_id, memory_media(id, storage_path, media_type)"
+          "id, title, memory_date, memory_media(id, storage_path, media_type, is_cover)"
         )
         .order("memory_date", { ascending: false, nullsFirst: false })
         .limit(4),

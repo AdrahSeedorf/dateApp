@@ -26,10 +26,9 @@ function memory(over: Partial<Memory> = {}): Memory {
 
 test("a chosen cover wins over the first image", () => {
   const m = memory({
-    cover_media_id: "b",
     memory_media: [
       { id: "a", storage_path: "first.jpg", media_type: "image" },
-      { id: "b", storage_path: "chosen.jpg", media_type: "image" },
+      { id: "b", storage_path: "chosen.jpg", media_type: "image", is_cover: true },
     ],
   });
 
@@ -47,13 +46,26 @@ test("without a chosen cover it falls back to the first image", () => {
   assert.equal(coverPathFor(m), "first.jpg");
 });
 
-test("a cover pointing at deleted media falls back rather than breaking", () => {
+test("a memory whose cover was deleted falls back rather than breaking", () => {
+  // The flagged row is simply gone; the remaining image takes over.
   const m = memory({
-    cover_media_id: "gone",
     memory_media: [{ id: "a", storage_path: "first.jpg", media_type: "image" }],
   });
 
   assert.equal(coverPathFor(m), "first.jpg");
+});
+
+test("a video can't be the cover even if it's flagged", () => {
+  // Nothing stops the flag being set on a video row, and a <video> in an
+  // <img> slot renders as a broken image rather than a poster frame.
+  const m = memory({
+    memory_media: [
+      { id: "a", storage_path: "clip.mp4", media_type: "video", is_cover: true },
+      { id: "b", storage_path: "photo.jpg", media_type: "image" },
+    ],
+  });
+
+  assert.equal(coverPathFor(m), "photo.jpg");
 });
 
 test("a memory with no images has no cover", () => {

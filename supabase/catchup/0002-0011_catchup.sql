@@ -1,5 +1,5 @@
 -- ============================================================================
--- CATCH-UP: migrations 0002 through 0010, in order.
+-- CATCH-UP: migrations 0002 through 0011, in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -15,7 +15,6 @@
 -- Generated from the individual files in supabase/migrations/ — edit those,
 -- not this.
 -- ============================================================================
-
 
 
 -- ####################  0002_profiles_and_preferences.sql  ####################
@@ -695,9 +694,20 @@ alter table public.memories
 
 -- Until now the cover was "the first image we happened to get back", which
 -- meant it changed when photos were added or reordered. This pins it.
-alter table public.memories
-  add column if not exists cover_media_id uuid
-    references public.memory_media(id) on delete set null;
+--
+-- The flag lives on the media row rather than as `memories.cover_media_id`.
+-- That looked more natural but created a second foreign key between
+-- `memories` and `memory_media` in the opposite direction, and PostgREST
+-- then refuses every embed with "more than one relationship was found" —
+-- it cannot tell which of the two an embed means. Being a property of the
+-- photo is also simply truer: it is the photo that is the cover.
+alter table public.memory_media
+  add column if not exists is_cover boolean not null default false;
+
+-- At most one cover per memory, enforced rather than hoped for.
+create unique index if not exists memory_media_one_cover_idx
+  on public.memory_media(memory_id)
+  where is_cover;
 
 create index if not exists memories_couple_favourite_idx
   on public.memories(couple_id, is_favourite)
@@ -1031,3 +1041,60 @@ alter table public.couples
 -- a question we can simply have asked correctly once.
 alter table public.profiles
   add column if not exists timezone text;
+
+
+-- ####################  0011_fix_cover_relationship.sql  ####################
+
+-- ============================================================================
+-- Remove the circular relationship between memories and memory_media
+--
+-- An earlier version of 0007 added `memories.cover_media_id` referencing
+-- `memory_media(id)`. Since `memory_media.memory_id` already references
+-- `memories(id)`, that made two foreign keys between the same pair of tables
+-- pointing opposite ways.
+--
+-- PostgREST cannot resolve an embed when that is true. Every query of the
+-- form `memories?select=...,memory_media(...)` failed outright with:
+--
+--   Could not embed because more than one relationship was found for
+--   'memories' and 'memory_media'
+--
+-- which took out the memory vault and the dashboard's recent keepsakes in
+-- one go. Naming the constraint in each query would work, but it would be a
+-- rule every future query had to remember, and forgetting it fails loudly at
+-- runtime rather than at review.
+--
+-- So the relationship goes back to being one-directional, and "is this the
+-- cover?" becomes a property of the photo — which is what it always was.
+--
+-- Safe on a database that never had the column: 0007 now creates `is_cover`
+-- directly, and both statements below are guarded.
+-- ============================================================================
+
+alter table public.memory_media
+  add column if not exists is_cover boolean not null default false;
+
+create unique index if not exists memory_media_one_cover_idx
+  on public.memory_media(memory_id)
+  where is_cover;
+
+-- Carry across any cover already chosen before dropping the column.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'memories'
+      and column_name = 'cover_media_id'
+  ) then
+    execute '
+      update public.memory_media m
+      set is_cover = true
+      from public.memories mem
+      where mem.cover_media_id = m.id
+    ';
+  end if;
+end $$;
+
+alter table public.memories
+  drop column if exists cover_media_id;

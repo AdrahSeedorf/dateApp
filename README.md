@@ -42,6 +42,7 @@ tables and functions created by earlier ones.
 | 0008 | `0008_couple_profile.sql` | relationship chapter, theme, cover; chapter-change trigger |
 | 0009 | `0009_nudges.sql` | one-tap affection |
 | 0010 | `0010_long_distance.sql` | long-distance mode, reunion date, per-person timezone |
+| 0011 | `0011_fix_cover_relationship.sql` | moves the cover flag onto the media row, removing a circular foreign key that broke every `memory_media` embed |
 
 0002 onwards are written to be safe to re-run, so there's no harm in pasting
 one twice if you lose track. **0001 is not** — it creates tables outright and
@@ -55,8 +56,8 @@ everything is applied by hand — so two files exist to sort it out:
 
 | File | What it does |
 | --- | --- |
-| `supabase/catchup/check-schema.sql` | Prints which of 0001–0010 are applied and which are missing |
-| `supabase/catchup/0002-0010_catchup.sql` | All of 0002–0010 concatenated; safe to run whatever state you're in |
+| `supabase/catchup/check-schema.sql` | Prints which of 0001–0011 are applied and which are missing |
+| `supabase/catchup/0002-0011_catchup.sql` | All of 0002–0011 concatenated; safe to run whatever state you're in |
 
 Run the check first. If anything from 0002 on is missing, paste the catch-up
 file and run it once — every statement in it is guarded, so the ones already

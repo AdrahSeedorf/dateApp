@@ -32,9 +32,20 @@ alter table public.memories
 
 -- Until now the cover was "the first image we happened to get back", which
 -- meant it changed when photos were added or reordered. This pins it.
-alter table public.memories
-  add column if not exists cover_media_id uuid
-    references public.memory_media(id) on delete set null;
+--
+-- The flag lives on the media row rather than as `memories.cover_media_id`.
+-- That looked more natural but created a second foreign key between
+-- `memories` and `memory_media` in the opposite direction, and PostgREST
+-- then refuses every embed with "more than one relationship was found" —
+-- it cannot tell which of the two an embed means. Being a property of the
+-- photo is also simply truer: it is the photo that is the cover.
+alter table public.memory_media
+  add column if not exists is_cover boolean not null default false;
+
+-- At most one cover per memory, enforced rather than hoped for.
+create unique index if not exists memory_media_one_cover_idx
+  on public.memory_media(memory_id)
+  where is_cover;
 
 create index if not exists memories_couple_favourite_idx
   on public.memories(couple_id, is_favourite)

@@ -35,6 +35,11 @@ from (
       to_regclass('public.nudges') is not null),
     ('0010', 'long-distance mode',
       exists (select 1 from information_schema.columns
-              where table_name = 'couples' and column_name = 'distance_mode'))
+              where table_name = 'couples' and column_name = 'distance_mode')),
+    ('0011', 'cover flag on media, no circular FK',
+      exists (select 1 from information_schema.columns
+              where table_name = 'memory_media' and column_name = 'is_cover')
+      and not exists (select 1 from information_schema.columns
+              where table_name = 'memories' and column_name = 'cover_media_id'))
 ) as m(n, what, present)
 order by m.n;

@@ -23,7 +23,7 @@ export default async function MemoriesPage({ searchParams }: Props) {
   const { data, error } = await supabase
     .from("memories")
     .select(
-      "id, title, description, memory_date, location, category, is_favourite, cover_media_id, created_at, memory_media(id, storage_path, media_type)"
+      "id, title, description, memory_date, location, category, is_favourite, created_at, memory_media(id, storage_path, media_type, is_cover)"
     )
     .order("memory_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });

@@ -28,7 +28,7 @@ export default async function MemoryDetailPage({ params }: Props) {
   const { data, error } = await supabase
     .from("memories")
     .select(
-      "id, title, description, memory_date, location, category, is_favourite, cover_media_id, created_at, date_plan_id, memory_media(id, storage_path, media_type), date_plans(id, title)"
+      "id, title, description, memory_date, location, category, is_favourite, created_at, date_plan_id, memory_media(id, storage_path, media_type, is_cover), date_plans(id, title)"
     )
     .eq("id", id)
     .maybeSingle();
