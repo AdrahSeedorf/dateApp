@@ -18,8 +18,10 @@ import {
   listMilestones,
 } from "@/lib/milestones";
 import { coverPathFor, signPaths, type Memory } from "@/lib/memories";
+import { latestNudge, timeAgo } from "@/lib/nudges";
 import ChapterCard from "@/components/home/ChapterCard";
 import FirstSteps, { type Step } from "@/components/home/FirstSteps";
+import NudgeCard from "@/components/home/NudgeCard";
 import {
   Card,
   Pill,
@@ -61,6 +63,8 @@ export default async function HomePage() {
       listLetters(supabase),
       listMilestones(supabase),
     ]);
+
+  const nudge = await latestNudge(supabase);
 
   const [{ data: recentMemories }, { count: memoryCount }, { count: planCount }] =
     await Promise.all([
@@ -195,6 +199,18 @@ export default async function HomePage() {
       </header>
 
       <FirstSteps steps={steps} />
+
+      {/* Only with a partner: "send them something" with nobody there would
+          be a small cruelty on an already-empty screen. */}
+      {partner && (
+        <NudgeCard
+          partnerName={partner.displayName ?? "them"}
+          latest={nudge}
+          viewerId={session.userId}
+          // Formatted here so the component doesn't read the clock mid-render.
+          agoLabel={nudge ? timeAgo(nudge.created_at) : null}
+        />
+      )}
 
       {/* Something waiting beats anything else on the screen. */}
       {waitingForYou.length > 0 && (
