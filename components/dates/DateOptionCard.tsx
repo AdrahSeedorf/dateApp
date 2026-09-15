@@ -1,7 +1,15 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Calendar, MapPin, Wallet, Shirt, Sparkles, Accessibility } from "lucide-react";
+import {
+  Accessibility,
+  Calendar,
+  Info,
+  MapPin,
+  Shirt,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 import type { DateIdea } from "@/lib/dateIdeas";
 import { ACCESS_NEEDS } from "@/lib/accessNeeds";
 import { Card, Pill } from "@/components/ui";
@@ -104,13 +112,26 @@ export default function DateOptionCard({ option, index, action }: Props) {
  * or name somewhere that closed. Until generation is grounded against a
  * places API, this says so plainly rather than letting the confident layout
  * imply the details were checked.
+ *
+ * The Stitch design showed "Booked ✓ — quiet booth confirmed" on itinerary
+ * cards. Nothing here can book anything, and a plan that reads as confirmed
+ * when it isn't sends two people to a restaurant with no table on their
+ * anniversary. The model is instructed not to imply it; this says the quiet
+ * part out loud.
  */
 export function GeneratedCaveat() {
   return (
-    <p className="text-body-sm text-on-surface-variant/80">
-      Named places are AI best guesses — worth checking they&apos;re open
-      before you go.
-    </p>
+    <div className="flex items-start gap-space-sm rounded-lg border border-[var(--glass-rim)] bg-[var(--glass-1)] p-space-md">
+      <Info
+        className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant"
+        aria-hidden
+      />
+      <p className="text-body-sm text-on-surface-variant leading-relaxed">
+        Places are suggestions, not bookings — nothing here is reserved. Worth
+        checking they&apos;re open, and calling ahead if it&apos;s somewhere
+        that fills up.
+      </p>
+    </div>
   );
 }
 

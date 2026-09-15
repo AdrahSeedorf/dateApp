@@ -14,6 +14,44 @@ export const BUDGETS = ["Low", "Medium", "High"];
 export const SETTINGS = ["Indoor", "Outdoor", "Either"];
 export const TIMES = ["A couple hours", "Half a day", "The whole day"];
 
+/**
+ * How far from the familiar the plan should go.
+ *
+ * Stored preferences describe a couple in general; this describes tonight.
+ * Without it the generator answers a form filled in months ago, which is why
+ * every result feels the same after the third use.
+ *
+ * Three steps rather than a slider: a slider implies a precision the model
+ * cannot deliver, and nobody can tell 60 from 70.
+ */
+export const SURPRISE_LEVELS = [
+  {
+    key: "familiar",
+    label: "Something we know",
+    guidance:
+      "Stay close to what they already like. Familiar kinds of places, low risk, nothing that needs explaining.",
+  },
+  {
+    key: "balanced",
+    label: "A little new",
+    guidance:
+      "Mostly familiar, with one element they probably haven't done before.",
+  },
+  {
+    key: "surprise",
+    label: "Surprise us",
+    guidance:
+      "Lean unfamiliar. Suggest something they would not have thought of, as long as it still fits their constraints and budget.",
+  },
+] as const;
+
+export type SurpriseKey = (typeof SURPRISE_LEVELS)[number]["key"];
+
+export function surpriseGuidance(value: unknown): string {
+  const match = SURPRISE_LEVELS.find((level) => level.key === value);
+  return (match ?? SURPRISE_LEVELS[1]).guidance;
+}
+
 export type GenerateInput = {
   mood: string;
   budget: string;
@@ -21,6 +59,10 @@ export type GenerateInput = {
   time: string;
   location: string;
   note?: string;
+  /** Per-request, unlike the stored preferences. */
+  surprise?: SurpriseKey;
+  /** Free text, e.g. "after 6" or "Saturday afternoon". */
+  window?: string;
 };
 
 export type GenerateResult =

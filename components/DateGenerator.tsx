@@ -14,8 +14,10 @@ import {
   generateDateIdeas,
   MOODS,
   SETTINGS,
+  SURPRISE_LEVELS,
   TIMES,
   type DateIdea,
+  type SurpriseKey,
 } from "@/lib/dateIdeas";
 
 type Props = {
@@ -37,6 +39,8 @@ export default function DateGenerator({ coupleId }: Props) {
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [note, setNote] = useState("");
+  const [surprise, setSurprise] = useState<SurpriseKey>("balanced");
+  const [timeWindow, setTimeWindow] = useState("");
 
   const [options, setOptions] = useState<DateIdea[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
@@ -71,6 +75,8 @@ export default function DateGenerator({ coupleId }: Props) {
       time,
       location: location.trim(),
       note: note.trim(),
+      surprise,
+      window: timeWindow.trim(),
     });
 
     if (!result.ok) {
@@ -134,6 +140,33 @@ export default function DateGenerator({ coupleId }: Props) {
           <PillGroup label="Budget" options={BUDGETS} value={budget} onChange={setBudget} />
           <PillGroup label="Setting" options={SETTINGS} value={setting} onChange={setSetting} />
           <PillGroup label="Time available" options={TIMES} value={time} onChange={setTime} />
+
+          <div className="mb-space-lg">
+            <Field
+              id="window"
+              label="When, roughly (optional)"
+              value={timeWindow}
+              onChange={(e) => setTimeWindow(e.target.value)}
+              placeholder="Saturday evening, after 6"
+              hint="Helps with opening hours and light."
+            />
+          </div>
+
+          {/* Stored preferences describe the couple in general. This is the
+              one control that describes tonight, which is what stops every
+              result feeling like the last one. */}
+          <PillGroup
+            label="How far from the usual"
+            options={SURPRISE_LEVELS.map((level) => level.label)}
+            value={
+              SURPRISE_LEVELS.find((level) => level.key === surprise)?.label ??
+              ""
+            }
+            onChange={(label) => {
+              const match = SURPRISE_LEVELS.find((l) => l.label === label);
+              if (match) setSurprise(match.key);
+            }}
+          />
 
           <div className="mb-space-lg">
             <TextArea

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCoupleContext } from "@/lib/coupleContext";
 import { stageGuidance } from "@/lib/coupleProfile";
+import { surpriseGuidance } from "@/lib/dateIdeas";
 import { ACCESS_NEEDS, type AccessNeedKey } from "@/lib/accessNeeds";
 
 type GenerateDateRequest = {
@@ -10,6 +11,8 @@ type GenerateDateRequest = {
   time: string;
   location: string;
   note?: string;
+  surprise?: string;
+  window?: string;
 };
 
 type DateIdea = {
@@ -35,7 +38,9 @@ The personal note, if given, is your most important input. Build the date around
 
 Ground each plan in real, named places near the given location — actual rivers, parks, trails, lookouts, neighbourhoods or landmarks. Use your knowledge of well-known, stable local geography confidently.
 
-Be careful with business names: only name one if you're reasonably confident it's real and well established there. Otherwise describe the type of place and the area. Never fabricate an address.`;
+Be careful with business names: only name one if you're reasonably confident it's real and well established there. Otherwise describe the type of place and the area. Never fabricate an address.
+
+Never state or imply that anything has been booked, reserved, confirmed or arranged. You have no ability to make a reservation and the app does not either. Where a place would normally need one, say so plainly as something the couple must do themselves — "worth booking ahead", not "table reserved". A plan that sounds confirmed when it isn't sends two people to a restaurant with no table.`;
 
 function accessSection(needs: AccessNeedKey[]): string {
   if (needs.length === 0) return "";
@@ -138,7 +143,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { mood, budget, setting, time, location, note } = body;
+  // Destructured under a different name: `window` reads as the browser
+  // global even in a server file, and the confusion is not worth the
+  // symmetry with the JSON field.
+  const { mood, budget, setting, time, location, note, surprise } = body;
+  const timeWindow = body.window;
 
   if (!mood || !budget || !setting || !time || !location) {
     return NextResponse.json(
@@ -154,6 +163,9 @@ export async function POST(request: Request) {
     // The chapter a couple is in changes what "a good date" means more than
     // almost anything else collected — this is why the field exists.
     stageGuidance(context.stage) ?? "",
+    // Per-request, so the same couple can get a different answer tonight
+    // than they did last week.
+    surpriseGuidance(surprise),
     context.interests.length > 0
       ? `They like: ${context.interests.join(", ")}.`
       : "",
@@ -173,6 +185,7 @@ export async function POST(request: Request) {
   const userMessage = [
     `Location: ${location}.`,
     `Mood: ${mood}. Budget: ${budget}. Setting: ${setting}. Time available: ${time}.`,
+    timeWindow?.trim() ? `When: ${timeWindow.trim()}.` : "",
     ...preferenceLines,
     trimmedNote ? `Personal note from the planner: "${trimmedNote}"` : "",
     "Suggest two distinct, decisive date options grounded in real, named places near this location.",
