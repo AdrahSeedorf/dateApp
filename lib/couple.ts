@@ -8,6 +8,37 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * container gets created at the first moment something needs to go in it,
  * rather than up front.
  */
+/**
+ * The other person in the couple, if anyone has joined yet.
+ *
+ * Returns null when they're alone — which is the normal state between
+ * creating an invite and it being redeemed, not an error. Callers that need
+ * a partner (letters, for one) have to handle that rather than assume.
+ */
+export async function getPartner(
+  supabase: SupabaseClient,
+  userId: string,
+  coupleId: string | null
+): Promise<{ id: string; displayName: string | null } | null> {
+  if (!coupleId) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .eq("couple_id", coupleId)
+    .neq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[couple] partner lookup failed", error.message);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return { id: data.id, displayName: data.display_name ?? null };
+}
+
 export async function ensureCoupleId(
   supabase: SupabaseClient,
   userId: string,

@@ -16,6 +16,41 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type UnlockTrigger = "date" | "on_request";
 export type LetterStatus = "draft" | "sealed" | "opened";
 
+/**
+ * Wax colours.
+ *
+ * Mapped to token roles rather than fixed hexes so a seal still looks right
+ * after the couple changes their theme. `key` is what's stored; everything
+ * else is presentation and can change freely.
+ */
+export const SEAL_COLOURS = [
+  { key: "rose", label: "Bordeaux rose", className: "bg-primary text-on-primary" },
+  { key: "lavender", label: "Lavender", className: "bg-secondary text-on-secondary" },
+  { key: "champagne", label: "Champagne", className: "bg-tertiary text-on-tertiary" },
+  {
+    key: "obsidian",
+    label: "Obsidian",
+    className: "bg-surface-container-highest text-on-surface",
+  },
+] as const;
+
+export type SealColour = (typeof SEAL_COLOURS)[number]["key"];
+
+const SEAL_KEYS = new Set(SEAL_COLOURS.map((s) => s.key));
+
+/** Falls back rather than throwing: a bad colour is not worth losing a letter over. */
+export function sealColour(seal: Record<string, unknown> | null): SealColour {
+  const value = seal?.colour;
+  return typeof value === "string" && SEAL_KEYS.has(value as SealColour)
+    ? (value as SealColour)
+    : "rose";
+}
+
+export function sealClassName(seal: Record<string, unknown> | null): string {
+  const key = sealColour(seal);
+  return SEAL_COLOURS.find((s) => s.key === key)!.className;
+}
+
 export type Letter = {
   id: string;
   couple_id: string;
@@ -55,6 +90,19 @@ export function isUnlockable(letter: Letter, now: Date = new Date()): boolean {
   if (!letter.unlock_at) return false;
 
   return new Date(letter.unlock_at) <= now;
+}
+
+/**
+ * The earliest day a letter may be set to open: tomorrow.
+ *
+ * A letter that could be opened the moment it was sealed isn't a time
+ * capsule. Lives here rather than inline in a component because reading the
+ * clock during render is impure — correct for a Server Component, which
+ * renders once per request, but not something to write in a component body.
+ */
+export function earliestUnlockDate(now: Date = new Date()): string {
+  const tomorrow = new Date(now.getTime() + 86_400_000);
+  return tomorrow.toISOString().slice(0, 10);
 }
 
 /** Whole days remaining, or null when there's no date to count towards. */

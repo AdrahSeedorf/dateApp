@@ -3,7 +3,10 @@ import { test } from "node:test";
 
 import {
   daysUntilUnlock,
+  earliestUnlockDate,
   isUnlockable,
+  sealClassName,
+  sealColour,
   sealedSummary,
   type Letter,
 } from "./letters.ts";
@@ -123,4 +126,36 @@ test("summaries read correctly from each side", () => {
   assert.equal(sealedSummary(opened, false), "You've opened this");
 
   assert.equal(sealedSummary(letter({ status: "draft" }), true), "Not sent yet");
+});
+
+test("the earliest unlock date is tomorrow, not today", () => {
+  assert.equal(earliestUnlockDate(NOW), "2026-09-16");
+
+  // A letter dated today could be opened the moment it was sealed, which
+  // defeats the entire feature.
+  assert.notEqual(earliestUnlockDate(NOW), "2026-09-15");
+});
+
+test("a bad seal colour falls back instead of throwing", () => {
+  // Losing a letter because someone hand-edited a jsonb field would be a
+  // spectacularly bad trade.
+  assert.equal(sealColour({ colour: "not-a-colour" }), "rose");
+  assert.equal(sealColour({}), "rose");
+  assert.equal(sealColour(null), "rose");
+  assert.equal(sealColour({ colour: "champagne" }), "champagne");
+
+  assert.equal(typeof sealClassName(null), "string");
+  assert.notEqual(sealClassName({ colour: "lavender" }), "");
+});
+
+test("seal colours use theme tokens, never fixed hexes", () => {
+  // A hardcoded colour would survive a theme change and look wrong.
+  for (const seal of ["rose", "lavender", "champagne", "obsidian"]) {
+    const className = sealClassName({ colour: seal });
+    assert.equal(
+      /#[0-9a-f]{3,8}/i.test(className),
+      false,
+      `${seal} should not carry a literal hex`
+    );
+  }
 });
