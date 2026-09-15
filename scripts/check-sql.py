@@ -57,8 +57,12 @@ for sub in ("migrations", "tests"):
         note = ""
         claimed = re.search(r"ALL (\d+) TESTS PASSED", raw)
         if claimed:
-            # minus one for the helper's own definition
-            found = len(re.findall(r"pg_temp\.ok\(", raw)) - 1
+            # Count both assertion helpers, minus one each for their own
+            # definitions.
+            found = (
+                len(re.findall(r"pg_temp\.ok\(", raw)) - 1
+                + len(re.findall(r"pg_temp\.ok_eq\(", raw)) - 1
+            )
             want = int(claimed.group(1))
             if found != want:
                 print(f"FAIL  {sub}/{name}: claims {want} tests, has {found}")

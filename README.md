@@ -26,11 +26,38 @@ npm install
 
 ### 3. Run the schema
 
-In the Supabase dashboard → **SQL Editor** → New query, paste the entire
-contents of `supabase/migrations/0001_init.sql` and run it.
+In the Supabase dashboard → **SQL Editor** → New query, paste each file from
+`supabase/migrations/` and run it. **Order matters** — later files reference
+tables and functions created by earlier ones.
 
-This creates the tables, Row Level Security policies, and the private storage
-bucket for photos and videos.
+| # | File | What it adds |
+| --- | --- | --- |
+| 0001 | `0001_init.sql` | couples, profiles, invites, date_plans, memories, memory_media; RLS on all of them; the private storage bucket |
+| 0002 | `0002_profiles_and_preferences.sql` | location and onboarding state on profiles; `profile_prefs` (interests, access needs) |
+| 0003 | `0003_couple_creation.sql` | the insert policy that lets someone create their own couple |
+| 0004 | `0004_onboarding_path.sql` | `onboarding_path`, so the invited partner gets the shorter flow |
+| 0005 | `0005_letters.sql` | time-capsule letters and the database-enforced unlock |
+
+0002 onwards are written to be safe to re-run, so there's no harm in pasting
+one twice if you lose track. **0001 is not** — it creates tables outright and
+will error with `relation already exists` on a second run. That error is
+harmless; it means the schema was already there.
+
+If you see `relation "public.<something>" does not exist`, a migration earlier
+in the list hasn't been run yet.
+
+### 3a. Verify the letter lock (recommended)
+
+Letters make a promise the database has to keep: the recipient cannot read one
+before it opens. Paste `supabase/tests/0005_letters_test.sql` into the SQL
+editor and run it. It creates two couples, acts as each person against the
+real policies, asserts 19 things, and ends in `ROLLBACK` — so it changes
+nothing.
+
+Success prints `ALL 19 TESTS PASSED`. Anything else means the lock isn't
+holding, and letters shouldn't ship until it does.
+
+Worth re-running after any change to the policies in `0005`.
 
 ### 4. Environment variables
 

@@ -37,6 +37,28 @@ begin
 end $$;
 
 /**
+ * Equality assertion that reports the actual value on failure.
+ *
+ * Worth the extra helper: a bare boolean assertion tells you a comparison
+ * failed but not what was found, and here the interesting failures are
+ * exactly the ones where the difference matters — null (the lock held when
+ * it shouldn't have) reads very differently from the wrong string (a broken
+ * fixture).
+ */
+create or replace function pg_temp.ok_eq(
+  p_actual text, p_expected text, p_what text
+) returns void language plpgsql as $$
+begin
+  if p_actual is distinct from p_expected then
+    raise exception 'FAILED: % (expected %, got %)',
+      p_what,
+      coalesce(quote_literal(p_expected), 'NULL'),
+      coalesce(quote_literal(p_actual), 'NULL');
+  end if;
+  raise notice '  pass: %', p_what;
+end $$;
+
+/**
  * Refuses to continue unless we are genuinely acting as a restricted user.
  *
  * This matters more than it looks. RLS does not apply to superusers or to
@@ -124,8 +146,10 @@ values
    '22222222-2222-2222-2222-222222222222',
    'Still writing this', 'draft', 'on_request', null, null);
 
+-- Body text is derived from the id so each is distinguishable: letter
+-- ffff0002-… gets 'SECRET-0002'. The discriminator starts at character 5.
 insert into public.letter_contents (letter_id, couple_id, body)
-select id, couple_id, 'SECRET-' || substr(id::text, 6, 4)
+select id, couple_id, 'SECRET-' || substr(id::text, 5, 4)
 from public.letters;
 
 -- ============================================================================
@@ -194,13 +218,13 @@ begin
 
   select body into v_body from public.letter_contents
   where letter_id = 'ffff0002-0000-0000-0000-000000000002';
-  perform pg_temp.ok(v_body = 'SECRET-0002', 'body readable once opened');
+  perform pg_temp.ok_eq(v_body, 'SECRET-0002', 'body readable once opened');
 
   -- "Open on a tough day": no date, released when they ask.
   perform public.open_letter('ffff0003-0000-0000-0000-000000000003');
   select body into v_body from public.letter_contents
   where letter_id = 'ffff0003-0000-0000-0000-000000000003';
-  perform pg_temp.ok(v_body = 'SECRET-0003', 'on_request letter opens on demand');
+  perform pg_temp.ok_eq(v_body, 'SECRET-0003', 'on_request letter opens on demand');
 
   -- Re-reading must not rewrite the moment it was first opened.
   select opened_at into v_first from public.letters

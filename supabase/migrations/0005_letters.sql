@@ -351,9 +351,15 @@ $$;
 grant execute on function public.open_letter(uuid) to authenticated;
 grant execute on function public.letter_is_unlockable(public.letters) to authenticated;
 
--- can_read_letter_body is only ever called from inside a policy, never by a
--- client, so it is deliberately not granted to authenticated.
-revoke execute on function public.can_read_letter_body(uuid) from public;
+-- can_read_letter_body is only called from inside the policy above, but it is
+-- granted anyway, and on purpose.
+--
+-- RLS policy expressions are evaluated as the querying user, so `authenticated`
+-- needs EXECUTE or every read of letter_contents would fail with "permission
+-- denied for function" rather than returning no rows. Exposing it costs
+-- nothing: it answers one question — "may *you* read this?" — about the
+-- caller themselves, and returns a boolean either way.
+grant execute on function public.can_read_letter_body(uuid) to authenticated;
 
 -- ============================================================================
 -- Grants
