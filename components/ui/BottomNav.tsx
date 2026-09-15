@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Sparkles, Images, Mail } from "lucide-react";
+import { Heart, Sparkles, Images, Mail, Infinity as InfinityIcon } from "lucide-react";
 import { cn } from "./cn";
 
 /**
@@ -15,11 +15,10 @@ import { cn } from "./cn";
  * Every entry must point at a route that exists — a nav item that 404s is
  * worse than one that isn't there yet. scripts/check-routes.py enforces it.
  *
- * Two items from the Stitch design are deliberately missing. Timeline waits
- * on its screen being built. Companion is the raised centre item, and is not
- * a destination at all: it opens the AI assistant over whatever screen
- * you're on, so it comes back as a button rather than a link once there is
- * an assistant for it to open.
+ * Companion, the raised centre item in the Stitch design, is deliberately
+ * missing. It is not a destination at all: it opens the AI assistant over
+ * whatever screen you're on, so it belongs here as a button rather than a
+ * link, once there is an assistant for it to open.
  */
 
 const ITEMS = [
@@ -27,6 +26,7 @@ const ITEMS = [
   { href: "/dates", label: "Planner", Icon: Sparkles },
   { href: "/memories", label: "Memory", Icon: Images },
   { href: "/letters", label: "Letters", Icon: Mail },
+  { href: "/timeline", label: "Timeline", Icon: InfinityIcon },
 ] as const;
 
 export default function BottomNav() {
