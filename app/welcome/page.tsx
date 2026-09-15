@@ -6,12 +6,15 @@ import {
   totalSteps,
   type OnboardingStep,
 } from "@/lib/onboarding";
+import { createClient } from "@/lib/supabase/server";
+import { isStage, safeTheme } from "@/lib/coupleProfile";
 import { Card, Screen } from "@/components/ui";
 import TextStep from "@/components/onboarding/TextStep";
 import GenerateStep from "@/components/onboarding/GenerateStep";
 import InviteStep from "@/components/onboarding/InviteStep";
 import PrefsStep from "@/components/onboarding/PrefsStep";
 import SeedMemoriesStep from "@/components/onboarding/SeedMemoriesStep";
+import CoupleStep from "@/components/onboarding/CoupleStep";
 import { advanceStep, goBack, saveLocation, saveName } from "./actions";
 
 const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
@@ -31,6 +34,10 @@ const STEP_COPY: Record<OnboardingStep, { title: string; body: string }> = {
     title: "Bring the other half",
     body: "This works properly once you're both here.",
   },
+  couple: {
+    title: "The two of you",
+    body: "Shared settings — both of you see these.",
+  },
   prefs: {
     title: "Anything we should factor in?",
     body: "Interests, things you'd like to try, and anything a date needs to work around.",
@@ -46,6 +53,7 @@ const STEP_WIDTH: Record<OnboardingStep, string> = {
   location: "max-w-md",
   generate: "max-w-2xl",
   invite: "max-w-md",
+  couple: "max-w-2xl",
   prefs: "max-w-3xl",
   memories: "max-w-xl",
 };
@@ -58,6 +66,10 @@ const PARTNER_COPY: Partial<Record<OnboardingStep, { title: string; body: string
   name: {
     title: "You're in",
     body: "Someone set this up for the two of you. What should we call you?",
+  },
+  couple: {
+    title: "The two of you",
+    body: "They set some of this up already — change anything that isn't right.",
   },
   prefs: {
     title: "Anything we should know?",
@@ -96,6 +108,26 @@ export default async function WelcomePage() {
   }
 
   const canGoBack = previousStep(step, path) !== null;
+
+  // Only the couple step needs this, and it's one row.
+  const supabase = await createClient();
+  const { data: couple } =
+    step === "couple" && session.coupleId
+      ? await supabase
+          .from("couples")
+          .select("name, started_at, stage, theme")
+          .eq("id", session.coupleId)
+          .maybeSingle()
+      : { data: null };
+
+  // A partner arriving second usually finds the creator has already answered
+  // "where did you first meet?", so asking again would be odd.
+  const { count: existingMemories } =
+    step === "couple"
+      ? await supabase
+          .from("memories")
+          .select("id", { count: "exact", head: true })
+      : { count: 0 };
 
   return (
     <Screen className="flex min-h-screen items-center justify-center py-12">
@@ -169,6 +201,18 @@ export default async function WelcomePage() {
           )}
 
           {step === "invite" && <InviteStep onDone={skip} />}
+
+          {step === "couple" && (
+            <CoupleStep
+              values={{
+                name: couple?.name ?? "",
+                startedAt: couple?.started_at ?? "",
+                stage: isStage(couple?.stage) ? couple.stage : null,
+                theme: safeTheme(couple?.theme),
+              }}
+              askForFirstMemory={(existingMemories ?? 0) === 0}
+            />
+          )}
 
           {step === "prefs" && <PrefsStep onSkip={skip} />}
 

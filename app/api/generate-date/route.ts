@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCoupleContext } from "@/lib/coupleContext";
+import { stageGuidance } from "@/lib/coupleProfile";
 import { ACCESS_NEEDS, type AccessNeedKey } from "@/lib/accessNeeds";
 
 type GenerateDateRequest = {
@@ -150,6 +151,9 @@ export async function POST(request: Request) {
   const trimmedNote = note?.trim();
 
   const preferenceLines = [
+    // The chapter a couple is in changes what "a good date" means more than
+    // almost anything else collected — this is why the field exists.
+    stageGuidance(context.stage) ?? "",
     context.interests.length > 0
       ? `They like: ${context.interests.join(", ")}.`
       : "",

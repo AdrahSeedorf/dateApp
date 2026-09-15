@@ -4,12 +4,19 @@
  * The order encodes the design decision that matters: the partner invite
  * comes *after* the person has generated a real date. Asking before they've
  * seen anything is why people never invite anyone.
+ *
+ * "couple" is the shared step — chapter, theme, cover, anniversary. It sits
+ * after the invite because it describes the pair, and before preferences
+ * because those are personal. The partner sees it too: it is the one thing
+ * about the relationship they get a say in, and skipping it for them would
+ * leave the second person with no shared setup moment of their own.
  */
 export const ONBOARDING_STEPS = [
   "name",
   "location",
   "generate",
   "invite",
+  "couple",
   "prefs",
   "memories",
 ] as const;

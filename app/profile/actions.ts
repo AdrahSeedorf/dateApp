@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isStage, safeTheme } from "@/lib/coupleProfile";
 import { getSessionProfile } from "@/lib/auth";
 import { ACCESS_NEEDS, type AccessNeeds } from "@/lib/accessNeeds";
 import { ALL_INTERESTS, AVOID_OPTIONS, keepKnown } from "@/lib/interests";
@@ -110,11 +111,22 @@ export async function saveCouple(
 
   const name = String(formData.get("couple_name") ?? "").trim();
   const startedAt = String(formData.get("started_at") ?? "").trim();
+  const stage = String(formData.get("stage") ?? "");
+  const theme = safeTheme(formData.get("theme"));
+
+  if (startedAt && !/^\d{4}-\d{2}-\d{2}$/.test(startedAt)) {
+    return { error: "That date didn't make sense." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("couples")
-    .update({ name: name || null, started_at: startedAt || null })
+    .update({
+      name: name || null,
+      started_at: startedAt || null,
+      stage: isStage(stage) ? stage : null,
+      theme,
+    })
     .eq("id", session.coupleId);
 
   if (error) {
@@ -122,8 +134,9 @@ export async function saveCouple(
     return { error: "Couldn't save that. Try again." };
   }
 
-  revalidatePath("/profile");
-  revalidatePath("/home");
+  // The theme lives on <html>, which the root layout renders, so every route
+  // has to be revalidated for a colour change to take effect everywhere.
+  revalidatePath("/", "layout");
   return { saved: "Saved" };
 }
 

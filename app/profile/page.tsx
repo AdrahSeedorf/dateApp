@@ -4,6 +4,8 @@ import { requireOnboarded } from "@/lib/auth";
 import { parseAccessNeeds } from "@/lib/accessNeeds";
 import PrefsFields, { type PrefsValues } from "@/components/prefs/PrefsFields";
 import SaveableForm from "@/components/profile/SaveableForm";
+import CoupleFields from "@/components/couple/CoupleFields";
+import { isStage, safeTheme } from "@/lib/coupleProfile";
 import { Field, Screen, ScreenHeader } from "@/components/ui";
 import {
   changeEmail,
@@ -36,7 +38,7 @@ export default async function ProfilePage() {
   const { data: couple } = session.coupleId
     ? await supabase
         .from("couples")
-        .select("name, started_at")
+        .select("name, started_at, stage, theme")
         .eq("id", session.coupleId)
         .maybeSingle()
     : { data: null };
@@ -101,24 +103,16 @@ export default async function ProfilePage() {
                 : "Nobody else has joined yet. Changes here will show for them when they do."
             }
           >
-            <div className="grid gap-space-md sm:grid-cols-2">
-              <Field
-                id="couple_name"
-                name="couple_name"
-                label="What to call yourselves"
-                defaultValue={couple?.name ?? ""}
-                placeholder="Us"
-              />
-
-              <Field
-                id="started_at"
-                name="started_at"
-                type="date"
-                label="Together since"
-                defaultValue={couple?.started_at ?? ""}
-                hint="Turns on the days counter. Leave empty until it's real."
-              />
-            </div>
+            {/* Same component the onboarding step uses, so the two can't
+                drift apart as fields are added. */}
+            <CoupleFields
+              values={{
+                name: couple?.name ?? "",
+                startedAt: couple?.started_at ?? "",
+                stage: isStage(couple?.stage) ? couple.stage : null,
+                theme: safeTheme(couple?.theme),
+              }}
+            />
           </SaveableForm>
         )}
 

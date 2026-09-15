@@ -17,7 +17,7 @@ import {
   describeUpcoming,
   listMilestones,
 } from "@/lib/milestones";
-import { signPaths, type Memory } from "@/lib/memories";
+import { coverPathFor, signPaths, type Memory } from "@/lib/memories";
 import ChapterCard from "@/components/home/ChapterCard";
 import FirstSteps, { type Step } from "@/components/home/FirstSteps";
 import {
@@ -66,7 +66,9 @@ export default async function HomePage() {
     await Promise.all([
       supabase
         .from("memories")
-        .select("id, title, memory_date, memory_media(storage_path, media_type)")
+        .select(
+          "id, title, memory_date, cover_media_id, memory_media(id, storage_path, media_type)"
+        )
         .order("memory_date", { ascending: false, nullsFirst: false })
         .limit(4),
       supabase.from("memories").select("id", { count: "exact", head: true }),
@@ -76,9 +78,7 @@ export default async function HomePage() {
   const memories = (recentMemories ?? []) as Memory[];
 
   const coverPaths = memories
-    .map(
-      (m) => m.memory_media?.find((x) => x.media_type === "image")?.storage_path
-    )
+    .map(coverPathFor)
     .filter((p): p is string => Boolean(p));
 
   const signed = await signPaths(supabase, coverPaths);
@@ -287,9 +287,7 @@ export default async function HomePage() {
         >
           <ul className="grid grid-cols-2 gap-space-sm">
             {memories.slice(0, 4).map((memory) => {
-              const cover = memory.memory_media?.find(
-                (m) => m.media_type === "image"
-              )?.storage_path;
+              const cover = coverPathFor(memory);
               const url = cover ? signed[cover] : undefined;
 
               return (
