@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test --experimental-strip-types 'lib/**/*.test.ts'",
+    "check": "npx tsc --noEmit && npx eslint . && python3 scripts/check-contrast.py && python3 scripts/check-tokens.py && python3 scripts/check-sql.py && npm test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
