@@ -37,14 +37,33 @@ tables and functions created by earlier ones.
 | 0003 | `0003_couple_creation.sql` | the insert policy that lets someone create their own couple |
 | 0004 | `0004_onboarding_path.sql` | `onboarding_path`, so the invited partner gets the shorter flow |
 | 0005 | `0005_letters.sql` | time-capsule letters and the database-enforced unlock |
+| 0006 | `0006_milestones.sql` | the timeline — past and future milestones on one spine |
+| 0007 | `0007_memory_detail.sql` | memory categories, favourites, covers, and reflections |
+| 0008 | `0008_couple_profile.sql` | relationship chapter, theme, cover; chapter-change trigger |
+| 0009 | `0009_nudges.sql` | one-tap affection |
+| 0010 | `0010_long_distance.sql` | long-distance mode, reunion date, per-person timezone |
 
 0002 onwards are written to be safe to re-run, so there's no harm in pasting
 one twice if you lose track. **0001 is not** — it creates tables outright and
 will error with `relation already exists` on a second run. That error is
 harmless; it means the schema was already there.
 
-If you see `relation "public.<something>" does not exist`, a migration earlier
-in the list hasn't been run yet.
+### If the app says a column or relation doesn't exist
+
+That always means a migration hasn't been run. There's no migrations table —
+everything is applied by hand — so two files exist to sort it out:
+
+| File | What it does |
+| --- | --- |
+| `supabase/catchup/check-schema.sql` | Prints which of 0001–0010 are applied and which are missing |
+| `supabase/catchup/0002-0010_catchup.sql` | All of 0002–0010 concatenated; safe to run whatever state you're in |
+
+Run the check first. If anything from 0002 on is missing, paste the catch-up
+file and run it once — every statement in it is guarded, so the ones already
+applied are no-ops.
+
+The catch-up file is generated from the individual migrations. Edit those,
+never it.
 
 ### 3a. Verify the letter lock (recommended)
 
@@ -158,19 +177,40 @@ segment is what the storage policies check.
 
 ## Status
 
-Done:
+Working:
 
-- Project scaffold, Tailwind v4, TypeScript
-- Full schema + RLS + storage bucket
-- Supabase browser/server/admin clients
-- Session refresh middleware and route gating
-- Magic-link sign-in
-- Invite redemption (the V1 → V2 handoff)
-- Our Journey dashboard reading real data
+- Schema, RLS and storage across ten migrations
+- Magic-link sign-in and invite redemption (the V1 → V2 handoff)
+- Onboarding: seven steps, path-aware for the invited partner
+- Preferences, access needs, and a profile that can edit all of it
+- Date generation shaped by preferences, access needs, relationship chapter,
+  and per-request controls
+- Memory vault with categories, favourites, media and reflections
+- Time-capsule letters with a lock enforced in the database
+- Timeline of milestones, past and future
+- Dashboard with a deliberately designed day-one state
+- Nudges, long-distance mode, four themes
 
-Next:
+Deferred, and why — the full triage is in `docs/vision.md`:
 
-- Memory Vault (list, detail, create/edit, photo + video upload)
-- Port the Date Generator over from V1, saving to `date_plans`
-- Link a memory to the date it came from
-- Messaging (deferred — after memories are solid)
+- **Multi-stop itineraries** — needs a places API to verify venues exist and
+  are open, otherwise the model invents them
+- **Weather, maps, couple footsteps** — paid dependencies
+- **Voice notes and soundtracks** — audio storage; music needs a licensed
+  embed rather than self-hosting
+- **Push notifications** — nudges and letters currently wait for the partner's
+  next visit, and the UI says so
+- **Partner-hasn't-joined nudge** — needs custom SMTP; Supabase's built-in
+  email is rate-limited
+- **Print ordering** — a fulfilment partner, payments and addresses
+
+Refused outright:
+
+- **Relationship scoring.** A number that grades a relationship will fall, and
+  someone will watch it fall during a bad week. Counts only go up.
+- **Heart rate, haptics, paired wearables, live camera feeds.** No hardware
+  layer is coming, and partner-to-partner video is a consent model we have not
+  designed and do not want.
+- **Claiming end-to-end encryption.** Data is encrypted in transit and at rest
+  and RLS separates couples, but the server can read it. The copy says
+  "private to the two of you" because that is what is true.
