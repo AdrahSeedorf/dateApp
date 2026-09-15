@@ -8,7 +8,7 @@ import {
   daysUntilUnlock,
   getLetter,
   isUnlockable,
-  sealClassName,
+  sealStyle,
   sealedSummary,
 } from "@/lib/letters";
 import UnsealButton from "@/components/letters/UnsealButton";
@@ -74,9 +74,9 @@ export default async function LetterPage({ params, searchParams }: Props) {
       <div className="mb-space-lg flex items-start gap-space-md">
         <span
           aria-hidden
+          style={sealStyle(letter.seal)}
           className={cn(
             "flex h-14 w-14 shrink-0 items-center justify-center rounded-full",
-            sealClassName(letter.seal),
             letter.status === "opened" && "opacity-50"
           )}
         >

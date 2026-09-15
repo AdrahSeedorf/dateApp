@@ -159,7 +159,8 @@ export default function ComposeForm({ partnerName, minUnlockDate }: Props) {
                 >
                   <span
                     aria-hidden
-                    className={cn("h-4 w-4 rounded-full", option.className)}
+                    style={{ background: option.hex }}
+                    className="h-4 w-4 rounded-full"
                   />
                   {option.label}
                 </span>

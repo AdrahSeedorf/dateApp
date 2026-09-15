@@ -34,6 +34,34 @@ export default async function MemoriesPage({ searchParams }: Props) {
 
   const all = (data ?? []) as Memory[];
 
+  // A failed query and an empty vault are very different things, and
+  // rendering both as "nothing here yet" is how a missing migration
+  // disguised itself as no memories. Say which it is.
+  if (error) {
+    return (
+      <Screen withNav className="mx-auto max-w-5xl">
+        <Link
+          href="/home"
+          className="mt-space-lg inline-block text-body-sm text-on-surface-variant transition hover:text-on-surface"
+        >
+          ← Our Journey
+        </Link>
+
+        <ScreenHeader eyebrow="Memory vault" title="Couldn't load these" />
+
+        <Card className="p-space-xl">
+          <p className="mb-space-md text-body-md text-on-surface-variant leading-relaxed">
+            Your memories are still there — this screen just couldn&apos;t read
+            them. Usually that means a database migration hasn&apos;t been run.
+          </p>
+          <p className="font-mono text-body-sm text-error break-words">
+            {error.message}
+          </p>
+        </Card>
+      </Screen>
+    );
+  }
+
   // Filters are built from the categories actually in use rather than a fixed
   // list, so a couple's own vocabulary is what they get to filter by.
   const categories = [...new Set(all.map((m) => m.category).filter(Boolean))]

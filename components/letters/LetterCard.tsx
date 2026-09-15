@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Lock, LockOpen, Mail, PenLine } from "lucide-react";
 import {
   isUnlockable,
-  sealClassName,
+  sealStyle,
   sealedSummary,
   type Letter,
 } from "@/lib/letters";
@@ -51,9 +51,9 @@ export default function LetterCard({ letter, viewerId, partnerName }: Props) {
       {/* The wax seal. Decorative — everything it signals is also in text. */}
       <span
         aria-hidden
+        style={sealStyle(letter.seal)}
         className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
-          sealClassName(letter.seal),
           letter.status === "opened" && "opacity-50"
         )}
       >

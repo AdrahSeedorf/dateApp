@@ -37,7 +37,17 @@ export default function BottomNav() {
       aria-label="Primary"
       className="fixed bottom-0 inset-x-0 z-50 pb-safe px-margin-mobile pointer-events-none"
     >
-      <ul className="glass-float pointer-events-auto mx-auto mb-2 flex max-w-md items-center justify-between rounded-full p-space-xs">
+      {/* Nearly opaque rather than the standard glass layer. The nav floats
+          over scrolling content, and at 12% white the card text underneath
+          read straight through it — legible enough to be confusing about
+          which words belonged to which control. */}
+      <ul
+        className="pointer-events-auto mx-auto mb-2 flex max-w-md items-center
+                   justify-between rounded-full p-space-xs
+                   border border-[var(--glass-rim-strong)]
+                   bg-surface-container/95 backdrop-blur-2xl
+                   shadow-[var(--shadow-float)]"
+      >
         {ITEMS.map(({ href, label, Icon }) => {
           // startsWith so /memories/[id] keeps the Memory tab lit.
           const active = pathname === href || pathname.startsWith(`${href}/`);

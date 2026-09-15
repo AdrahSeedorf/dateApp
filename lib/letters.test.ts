@@ -5,9 +5,10 @@ import {
   daysUntilUnlock,
   earliestUnlockDate,
   isUnlockable,
-  sealClassName,
   sealColour,
+  sealStyle,
   sealedSummary,
+  SEAL_COLOURS,
   type Letter,
 } from "./letters.ts";
 
@@ -144,18 +145,27 @@ test("a bad seal colour falls back instead of throwing", () => {
   assert.equal(sealColour(null), "rose");
   assert.equal(sealColour({ colour: "champagne" }), "champagne");
 
-  assert.equal(typeof sealClassName(null), "string");
-  assert.notEqual(sealClassName({ colour: "lavender" }), "");
+  assert.ok(sealStyle(null).background);
+  assert.ok(sealStyle({ colour: "lavender" }).background);
 });
 
-test("seal colours use theme tokens, never fixed hexes", () => {
-  // A hardcoded colour would survive a theme change and look wrong.
-  for (const seal of ["rose", "lavender", "champagne", "obsidian"]) {
-    const className = sealClassName({ colour: seal });
-    assert.equal(
-      /#[0-9a-f]{3,8}/i.test(className),
-      false,
-      `${seal} should not carry a literal hex`
+test("wax colours are fixed, not theme tokens", () => {
+  // Reversed from an earlier version of this test. Mapping wax to theme
+  // tokens meant "Bordeaux rose" rendered purple under the lavender theme —
+  // the label and the colour disagreed. Wax doesn't change because the app's
+  // palette did.
+  for (const seal of SEAL_COLOURS) {
+    assert.match(
+      seal.hex,
+      /^#[0-9a-f]{6}$/i,
+      `${seal.key} needs a literal colour`
     );
+    assert.match(seal.ink, /^#[0-9a-f]{6}$/i);
   }
+});
+
+test("every wax colour is distinct", () => {
+  // Two seals that look the same make the picker pointless.
+  const hexes = SEAL_COLOURS.map((s) => s.hex.toLowerCase());
+  assert.equal(new Set(hexes).size, SEAL_COLOURS.length);
 });

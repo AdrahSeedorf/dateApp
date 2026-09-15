@@ -19,19 +19,22 @@ export type LetterStatus = "draft" | "sealed" | "opened";
 /**
  * Wax colours.
  *
- * Mapped to token roles rather than fixed hexes so a seal still looks right
- * after the couple changes their theme. `key` is what's stored; everything
- * else is presentation and can change freely.
+ * Fixed values, not theme tokens.
+ *
+ * These were originally mapped to `bg-primary` / `bg-secondary` / etc. so a
+ * seal would "still look right" after a theme change. That was wrong: under
+ * the lavender theme, "Bordeaux rose" rendered purple and "Lavender"
+ * rendered blue. The names became lies.
+ *
+ * Wax is a physical object. Bordeaux is bordeaux whatever colour the rest of
+ * the app is, and a seal someone chose last year should look the same today.
+ * These are the only hardcoded colours in the system, and that is the reason.
  */
 export const SEAL_COLOURS = [
-  { key: "rose", label: "Bordeaux rose", className: "bg-primary text-on-primary" },
-  { key: "lavender", label: "Lavender", className: "bg-secondary text-on-secondary" },
-  { key: "champagne", label: "Champagne", className: "bg-tertiary text-on-tertiary" },
-  {
-    key: "obsidian",
-    label: "Obsidian",
-    className: "bg-surface-container-highest text-on-surface",
-  },
+  { key: "rose", label: "Bordeaux rose", hex: "#8c2f39", ink: "#ffe4e6" },
+  { key: "lavender", label: "Lavender", hex: "#8b7ab8", ink: "#f5f0ff" },
+  { key: "champagne", label: "Champagne", hex: "#c8a563", ink: "#3d2f10" },
+  { key: "obsidian", label: "Obsidian", hex: "#2b2b33", ink: "#e4e1ee" },
 ] as const;
 
 export type SealColour = (typeof SEAL_COLOURS)[number]["key"];
@@ -46,9 +49,14 @@ export function sealColour(seal: Record<string, unknown> | null): SealColour {
     : "rose";
 }
 
-export function sealClassName(seal: Record<string, unknown> | null): string {
+/** Inline style for a wax seal, since these deliberately bypass the tokens. */
+export function sealStyle(seal: Record<string, unknown> | null): {
+  background: string;
+  color: string;
+} {
   const key = sealColour(seal);
-  return SEAL_COLOURS.find((s) => s.key === key)!.className;
+  const match = SEAL_COLOURS.find((s) => s.key === key)!;
+  return { background: match.hex, color: match.ink };
 }
 
 export type Letter = {
