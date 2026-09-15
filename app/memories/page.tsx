@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ImageIcon, MapPin, Plus, Star } from "lucide-react";
+import { ImageIcon, MapPin, Plus, Star, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
 import {
@@ -12,11 +12,11 @@ import {
 import { Button, Card, Pill, Screen, ScreenHeader, cn } from "@/components/ui";
 
 type Props = {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; deleted?: string }>;
 };
 
 export default async function MemoriesPage({ searchParams }: Props) {
-  const { filter } = await searchParams;
+  const { filter, deleted } = await searchParams;
   await requireOnboarded();
   const supabase = await createClient();
 
@@ -124,6 +124,22 @@ export default async function MemoriesPage({ searchParams }: Props) {
           </Button>
         }
       />
+
+      {deleted && (
+        // The undo path matters more than the confirmation: someone who just
+        // deleted the wrong thing should not have to go looking for the bin.
+        <Card
+          elevation="raised"
+          className="mb-space-lg flex flex-wrap items-center justify-between gap-space-md p-space-lg"
+        >
+          <p role="status" className="text-body-md text-on-surface">
+            Moved to Recently deleted. It&apos;ll keep for 30 days.
+          </p>
+          <Button href="/memories/deleted" size="sm" variant="secondary">
+            View it
+          </Button>
+        </Card>
+      )}
 
       {/* Real links rather than client-side state: filters survive a refresh,
           can be shared, and work before hydration. */}
@@ -253,6 +269,17 @@ export default async function MemoriesPage({ searchParams }: Props) {
           })}
         </div>
       )}
+      {/* Quiet, at the bottom: a bin is for when you need it, not something
+          to advertise above a wall of photographs. */}
+      <div className="mt-space-xl">
+        <Link
+          href="/memories/deleted"
+          className="inline-flex items-center gap-2 text-body-sm text-on-surface-variant transition hover:text-on-surface"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden />
+          Recently deleted
+        </Link>
+      </div>
     </Screen>
   );
 }

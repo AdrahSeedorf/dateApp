@@ -13,6 +13,8 @@ import {
   type Reflection,
 } from "@/lib/memories";
 import Reflections from "@/components/memories/Reflections";
+import MediaItem from "@/components/memories/MediaItem";
+import DeleteMemory from "@/components/memories/DeleteMemory";
 import { toggleFavourite } from "../actions";
 import { Card, Pill, Screen } from "@/components/ui";
 
@@ -172,30 +174,16 @@ export default async function MemoryDetailPage({ params }: Props) {
         <div className="space-y-space-md">
           {media.map((item) => {
             const url = signed[item.storage_path];
-            if (!url) return null;
+            if (!url || !item.id) return null;
 
             return (
-              <div
-                key={item.storage_path}
-                className="overflow-hidden rounded-xl border border-[var(--glass-rim)] bg-surface-container-lowest"
-              >
-                {item.media_type === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={url}
-                    alt=""
-                    loading="lazy"
-                    className="block h-auto w-full"
-                  />
-                ) : (
-                  <video
-                    src={url}
-                    controls
-                    playsInline
-                    className="block h-auto w-full"
-                  />
-                )}
-              </div>
+              <MediaItem
+                key={item.id}
+                item={{ ...item, id: item.id }}
+                memoryId={memory.id}
+                url={url}
+                alt={memory.title}
+              />
             );
           })}
         </div>
@@ -212,6 +200,11 @@ export default async function MemoryDetailPage({ params }: Props) {
         viewerId={session.userId}
         partnerName={partner?.displayName ?? null}
         reflections={reflections}
+      />
+
+      <DeleteMemory
+        memoryId={memory.id}
+        partnerName={partner?.displayName ?? null}
       />
     </Screen>
   );

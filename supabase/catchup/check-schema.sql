@@ -40,6 +40,12 @@ from (
       exists (select 1 from information_schema.columns
               where table_name = 'memory_media' and column_name = 'is_cover')
       and not exists (select 1 from information_schema.columns
-              where table_name = 'memories' and column_name = 'cover_media_id'))
+              where table_name = 'memories' and column_name = 'cover_media_id')),
+    ('0012', 'recoverable deletion + media update policy',
+      exists (select 1 from information_schema.columns
+              where table_name = 'memories' and column_name = 'deleted_at')
+      and exists (select 1 from pg_policies
+              where tablename = 'memory_media'
+                and policyname = 'update couple media'))
 ) as m(n, what, present)
 order by m.n;
