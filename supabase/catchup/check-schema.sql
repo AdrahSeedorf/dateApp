@@ -50,6 +50,11 @@ from (
     ('0013', 'date lifecycle + moments',
       to_regclass('public.date_moments') is not null
       and exists (select 1 from information_schema.columns
-              where table_name = 'date_plans' and column_name = 'started_at'))
+              where table_name = 'date_plans' and column_name = 'started_at')),
+    ('0014', 'who planned and who cancelled',
+      exists (select 1 from information_schema.columns
+              where table_name = 'date_plans' and column_name = 'planned_by')
+      and exists (select 1 from information_schema.columns
+              where table_name = 'date_plans' and column_name = 'cancelled_by'))
 ) as m(n, what, present)
 order by m.n;

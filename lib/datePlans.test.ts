@@ -44,6 +44,9 @@ function plan(over: Partial<DatePlan> = {}): DatePlan {
     ended_at: null,
     memory_id: null,
     created_at: "2026-09-01",
+    created_by: null,
+    planned_by: null,
+    cancelled_by: null,
     ...over,
   };
 }

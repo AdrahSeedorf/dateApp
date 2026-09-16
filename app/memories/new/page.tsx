@@ -58,6 +58,7 @@ export default async function NewMemoryPage({ searchParams }: Props) {
 
       <MemoryForm
         coupleId={session.coupleId}
+        userId={session.userId}
         datePlanId={planTitle ? (planId ?? null) : null}
         initialTitle={planTitle ?? ""}
         initialLocation={planLocation ?? ""}

@@ -23,13 +23,15 @@ import {
 
 type Props = {
   coupleId: string;
+  /** Stamped onto the saved plan, so "whose idea was this" has an answer. */
+  userId: string;
 };
 
 type Phase = "form" | "loading" | "result" | "error";
 
 const LOCATION_KEY = "hidden-truths-date-location";
 
-export default function DateGenerator({ coupleId }: Props) {
+export default function DateGenerator({ coupleId, userId }: Props) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -102,6 +104,7 @@ export default function DateGenerator({ coupleId }: Props) {
       .from("date_plans")
       .insert({
         couple_id: coupleId,
+        created_by: userId,
         title: option.title,
         activity: option.activity,
         location_type: option.locationType,

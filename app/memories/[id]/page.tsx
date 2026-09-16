@@ -12,6 +12,7 @@ import {
   type Memory,
   type Reflection,
 } from "@/lib/memories";
+import { attributionIsMeaningful, credit } from "@/lib/attribution";
 import Reflections from "@/components/memories/Reflections";
 import MediaItem from "@/components/memories/MediaItem";
 import DeleteMemory from "@/components/memories/DeleteMemory";
@@ -30,7 +31,7 @@ export default async function MemoryDetailPage({ params }: Props) {
   const { data, error } = await supabase
     .from("memories")
     .select(
-      "id, title, description, memory_date, location, category, is_favourite, created_at, date_plan_id, memory_media(id, storage_path, media_type, is_cover), date_plans(id, title)"
+      "id, title, description, memory_date, location, category, is_favourite, created_at, created_by, date_plan_id, memory_media(id, storage_path, media_type, is_cover), date_plans(id, title)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -81,6 +82,16 @@ export default async function MemoryDetailPage({ params }: Props) {
     ]);
 
   const reflections = (reflectionRows ?? []) as Reflection[];
+
+  const viewer = {
+    userId: session.userId,
+    partnerId: partner?.id ?? null,
+    partnerName: partner?.displayName ?? null,
+  };
+
+  const addedBy = attributionIsMeaningful(viewer)
+    ? credit(memory.created_by ?? null, "added this", viewer)
+    : null;
 
   const year = relationshipYear(
     memory.memory_date,
@@ -148,6 +159,8 @@ export default async function MemoryDetailPage({ params }: Props) {
             {memory.location}
           </span>
         )}
+
+        {addedBy && <span>{addedBy}</span>}
 
         {fromPlan && (
           <Link

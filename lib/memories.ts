@@ -21,6 +21,8 @@ export type Memory = {
   category?: string | null;
   is_favourite?: boolean;
   created_at: string;
+  /** Who added it. Null on anything saved before attribution was recorded. */
+  created_by?: string | null;
   memory_media?: MemoryMedia[];
 };
 

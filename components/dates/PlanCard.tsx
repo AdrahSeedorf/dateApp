@@ -8,6 +8,7 @@ import {
   isOverdue,
   type DatePlan,
 } from "@/lib/datePlans";
+import { isYou, nameOf, possessive, type Viewer } from "@/lib/attribution";
 import { Card, Pill, cn } from "@/components/ui";
 
 /**
@@ -17,10 +18,38 @@ import { Card, Pill, cn } from "@/components/ui";
  * is an idea, something in the diary, tonight, or a thing that already
  * happened and is still waiting to be written up.
  */
-export default function PlanCard({ plan }: { plan: DatePlan }) {
+export default function PlanCard({
+  plan,
+  viewer,
+}: {
+  plan: DatePlan;
+  /** Omit to show no attribution at all — correct when you're on your own. */
+  viewer?: Viewer;
+}) {
   const days = daysUntil(plan);
   const overdue = isOverdue(plan);
   const startable = canStart(plan);
+
+  /**
+   * Only the partner's actions are labelled.
+   *
+   * A list where every card says "You saved this" is a list that has told
+   * you nothing — you were there. The name earns its space precisely when
+   * the answer isn't the obvious one.
+   */
+  function theirs(actorId: string | null): string | null {
+    if (!viewer || isYou(actorId, viewer)) return null;
+
+    return nameOf(actorId, viewer);
+  }
+
+  const theirIdea =
+    plan.status === "saved" && viewer && !isYou(plan.created_by, viewer)
+      ? possessive(plan.created_by, viewer)
+      : null;
+
+  const theirPlan = plan.status === "planned" ? theirs(plan.planned_by) : null;
+  const theirCall = plan.status === "cancelled" ? theirs(plan.cancelled_by) : null;
 
   return (
     <Card
@@ -46,10 +75,20 @@ export default function PlanCard({ plan }: { plan: DatePlan }) {
           <Pill tone="tertiary">Needs writing up</Pill>
         )}
 
-        {plan.status === "cancelled" && <Pill>Called off</Pill>}
+        {plan.status === "cancelled" && (
+          <Pill>{theirCall ? `${theirCall} called it off` : "Called off"}</Pill>
+        )}
+
+        {theirIdea && <Pill tone="secondary">{theirIdea} idea</Pill>}
       </div>
 
       <p className="text-title-md text-on-surface">{plan.title}</p>
+
+      {theirPlan && (
+        <p className="mt-0.5 text-label-sm text-on-surface-variant">
+          {theirPlan} put this in the diary
+        </p>
+      )}
 
       {plan.status === "planned" && plan.scheduled_for && (
         <p className="mt-space-xs flex flex-wrap items-center gap-x-space-md gap-y-1 text-label-sm text-on-surface-variant">

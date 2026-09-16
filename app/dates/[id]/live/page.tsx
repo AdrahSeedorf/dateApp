@@ -10,6 +10,7 @@ import {
   getPlan,
   type Role,
 } from "@/lib/datePlans";
+import { attributionIsMeaningful, nameOf } from "@/lib/attribution";
 import { signPaths } from "@/lib/memories";
 import MomentCapture from "@/components/dates/MomentCapture";
 import { deleteMoment, endDate } from "../../actions";
@@ -28,6 +29,7 @@ type Moment = {
   storage_path: string | null;
   media_type: "image" | "video" | null;
   created_at: string;
+  created_by: string | null;
 };
 
 function whoLabel(role: Role, partnerName: string) {
@@ -57,9 +59,19 @@ export default async function LiveDatePage({
   const partner = await getPartner(supabase, session.userId, session.coupleId);
   const partnerName = partner?.displayName ?? "Them";
 
+  const viewer = {
+    userId: session.userId,
+    partnerId: partner?.id ?? null,
+    partnerName: partner?.displayName ?? null,
+  };
+
+  // On a date together, both phones are adding to the same stream. Knowing
+  // which of you caught something is half of why it's worth keeping.
+  const showWho = attributionIsMeaningful(viewer);
+
   const { data } = await supabase
     .from("date_moments")
-    .select("id, note, storage_path, media_type, created_at")
+    .select("id, note, storage_path, media_type, created_at, created_by")
     .eq("date_plan_id", id)
     .order("created_at", { ascending: false });
 
@@ -132,6 +144,8 @@ export default async function LiveDatePage({
               ? signed[moment.storage_path]
               : undefined;
 
+            const who = showWho ? nameOf(moment.created_by, viewer) : null;
+
             return (
               <li key={moment.id}>
                 <Card elevation="flat" className="overflow-hidden p-0">
@@ -155,6 +169,7 @@ export default async function LiveDatePage({
                           hour: "numeric",
                           minute: "2-digit",
                         })}
+                        {who && ` · ${who}`}
                       </p>
                     </div>
 

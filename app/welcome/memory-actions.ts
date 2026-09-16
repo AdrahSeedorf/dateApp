@@ -49,6 +49,7 @@ export async function seedMemories(
   const { error } = await supabase.from("memories").insert(
     entries.map((entry) => ({
       couple_id: couple.coupleId,
+      created_by: session.userId,
       title: entry.title,
       memory_date: entry.memory_date,
     }))

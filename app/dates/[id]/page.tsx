@@ -23,6 +23,7 @@ import {
   getPlan,
   isOverdue,
 } from "@/lib/datePlans";
+import { attributionIsMeaningful, credit, possessive } from "@/lib/attribution";
 import PlanForm from "@/components/dates/PlanForm";
 import CancelDate from "@/components/dates/CancelDate";
 import { deletePlan, startDate } from "../actions";
@@ -57,6 +58,19 @@ export default async function DatePlanPage({ params, searchParams }: Props) {
 
   const partner = await getPartner(supabase, session.userId, session.coupleId);
   const partnerName = partner?.displayName ?? "Them";
+
+  const viewer = {
+    userId: session.userId,
+    partnerId: partner?.id ?? null,
+    partnerName: partner?.displayName ?? null,
+  };
+
+  // Alone in the couple, every row is yours, and saying so on each one is
+  // noise rather than information.
+  const showWho = attributionIsMeaningful(viewer);
+  const whoseIdea = showWho ? possessive(plan.created_by, viewer) : null;
+  const whoPlanned = showWho ? credit(plan.planned_by, "put this in the diary", viewer) : null;
+  const whoCancelled = showWho ? credit(plan.cancelled_by, "called this off", viewer) : null;
 
   const days = daysUntil(plan);
   const startable = canStart(plan);
@@ -114,6 +128,17 @@ export default async function DatePlanPage({ params, searchParams }: Props) {
                 {formatTime(plan.scheduled_time)}
               </span>
             )}
+          </p>
+        )}
+
+        {/* Quiet by design: useful when you're wondering, invisible when
+            you're not. Both lines disappear entirely on older plans, which
+            have no attribution to show. */}
+        {(whoseIdea || whoPlanned) && (
+          <p className="mt-space-sm text-label-sm text-on-surface-variant">
+            {whoseIdea && <span>{whoseIdea} idea</span>}
+            {whoseIdea && whoPlanned && <span aria-hidden> · </span>}
+            {whoPlanned}
           </p>
         )}
       </header>
@@ -207,10 +232,14 @@ export default async function DatePlanPage({ params, searchParams }: Props) {
         </Card>
       )}
 
-      {plan.cancel_reason && plan.status === "cancelled" && (
+      {/* Shows for any cancellation now, not just ones with a reason typed.
+          A date that silently reverts to "Called off" with nothing beside it
+          is the kind of thing you end up asking your partner about. */}
+      {plan.status === "cancelled" && (plan.cancel_reason || whoCancelled) && (
         <Card elevation="flat" className="mb-space-lg p-space-lg">
           <p className="text-body-sm text-on-surface-variant">
-            Called off — {plan.cancel_reason}
+            {whoCancelled ?? "Called off"}
+            {plan.cancel_reason && ` — ${plan.cancel_reason}`}
           </p>
         </Card>
       )}

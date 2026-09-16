@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types 'lib/**/*.test.ts'",
-    "check": "npx tsc --noEmit && npx eslint . && python3 scripts/check-contrast.py && python3 scripts/check-tokens.py && python3 scripts/check-sql.py && python3 scripts/check-routes.py && python3 scripts/check-clock.py && npm test"
+    "check": "npx tsc --noEmit && npx eslint . && python3 scripts/check-contrast.py && python3 scripts/check-tokens.py && python3 scripts/check-sql.py && python3 scripts/build-catchup.py --check && python3 scripts/check-routes.py && python3 scripts/check-clock.py && npm test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

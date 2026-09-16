@@ -9,6 +9,8 @@ import { CATEGORY_SUGGESTIONS, MEDIA_BUCKET, mediaTypeFor, safeFileName, type Me
 
 type Props = {
   coupleId: string;
+  /** Recorded so the vault can say who added each memory. */
+  userId: string;
   /** Set when this memory is being logged against a saved date plan. */
   datePlanId?: string | null;
   initialTitle?: string;
@@ -23,6 +25,7 @@ type Pending = {
 
 export default function MemoryForm({
   coupleId,
+  userId,
   datePlanId = null,
   initialTitle = "",
   initialLocation = "",
@@ -92,6 +95,7 @@ export default function MemoryForm({
       .from("memories")
       .insert({
         couple_id: coupleId,
+        created_by: userId,
         date_plan_id: datePlanId,
         title: title.trim(),
         description: description.trim() || null,

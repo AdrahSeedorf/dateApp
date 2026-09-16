@@ -109,6 +109,7 @@ export async function saveFirstPlan(idea: {
 
   const { error } = await supabase.from("date_plans").insert({
     couple_id: couple.coupleId,
+    created_by: session.userId,
     title: idea.title,
     activity: idea.activity,
     location_type: idea.locationType,

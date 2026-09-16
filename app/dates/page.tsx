@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
+import { getPartner } from "@/lib/couple";
+import { attributionIsMeaningful } from "@/lib/attribution";
 import DateGenerator from "@/components/DateGenerator";
 import { listPlans } from "@/lib/datePlans";
 import PlanCard from "@/components/dates/PlanCard";
@@ -14,7 +16,20 @@ export default async function DatesPage() {
 
   if (!session.coupleId) redirect("/home");
 
-  const { plans, error } = await listPlans(supabase);
+  const [{ plans, error }, partner] = await Promise.all([
+    listPlans(supabase),
+    getPartner(supabase, session.userId, session.coupleId),
+  ]);
+
+  const candidate = {
+    userId: session.userId,
+    partnerId: partner?.id ?? null,
+    partnerName: partner?.displayName ?? null,
+  };
+
+  // Undefined rather than the object when they're alone: PlanCard reads that
+  // as "say nothing", which is the right answer when there's only one of you.
+  const viewer = attributionIsMeaningful(candidate) ? candidate : undefined;
 
   // Grouped by where each one is in its life, because that is what decides
   // what you can do with it. A flat list of "saved ideas" was fine when
@@ -46,7 +61,7 @@ export default async function DatesPage() {
         body="Two real options, grounded in actual places near you."
       />
 
-      <DateGenerator coupleId={session.coupleId} />
+      <DateGenerator coupleId={session.coupleId} userId={session.userId} />
 
       {error && (
         <p role="alert" className="mt-space-lg text-body-sm text-error">
@@ -58,7 +73,7 @@ export default async function DatesPage() {
         <Section title="Happening now" className="mt-space-xl">
           <div className="space-y-space-sm">
             {live.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} viewer={viewer} />
             ))}
           </div>
         </Section>
@@ -68,7 +83,7 @@ export default async function DatesPage() {
         <Section title="Waiting to be written up" className="mt-space-xl">
           <div className="space-y-space-sm">
             {needsWritingUp.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} viewer={viewer} />
             ))}
           </div>
         </Section>
@@ -78,7 +93,7 @@ export default async function DatesPage() {
         <Section title="In the diary" className="mt-space-xl">
           <div className="space-y-space-sm">
             {upcoming.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} viewer={viewer} />
             ))}
           </div>
         </Section>
@@ -95,7 +110,7 @@ export default async function DatesPage() {
 
           <div className="space-y-space-sm">
             {ideas.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} viewer={viewer} />
             ))}
           </div>
         </Section>
@@ -105,7 +120,7 @@ export default async function DatesPage() {
         <Section title="Been and gone" className="mt-space-xl">
           <div className="space-y-space-sm">
             {past.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} viewer={viewer} />
             ))}
           </div>
         </Section>

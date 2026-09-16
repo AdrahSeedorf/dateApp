@@ -36,6 +36,11 @@ export type DatePlan = {
   ended_at: string | null;
   memory_id: string | null;
   created_at: string;
+
+  /** Profile ids. Null on anything created before migration 0014. */
+  created_by: string | null;
+  planned_by: string | null;
+  cancelled_by: string | null;
 };
 
 export type Role = {
@@ -63,7 +68,7 @@ export const PLAN_COLUMNS =
   "id, couple_id, title, activity, location_type, budget_estimate, " +
   "outfit_note, vibe_note, notes, roles, scheduled_for, scheduled_time, " +
   "status, reschedule_count, cancelled_at, cancel_reason, started_at, " +
-  "ended_at, memory_id, created_at";
+  "ended_at, memory_id, created_at, created_by, planned_by, cancelled_by";
 
 /** Parses whatever is in the jsonb column, discarding anything malformed. */
 export function parseRoles(value: unknown): Role[] {
