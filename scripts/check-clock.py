@@ -19,6 +19,7 @@ CLOCKED = [
     "isUnlockable", "daysUntilUnlock", "sealedSummary", "earliestUnlockDate",
     "anniversary", "greeting", "buildTimeline", "daysUntilReunion",
     "dayDifference", "localTime", "timeAgo",
+    "daysUntil", "canStart", "isOverdue", "elapsedMinutes", "highlightPlan",
 ]
 
 # Anything that looks like a deliberately supplied clock.
