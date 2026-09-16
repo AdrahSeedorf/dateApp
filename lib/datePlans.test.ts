@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   awaitingMemory,
   canStart,
+  canStartNow,
   daysUntil,
   describeCountdown,
   elapsedMinutes,
@@ -85,6 +86,20 @@ test("only a planned date can be started", () => {
   for (const status of ["saved", "live", "done", "cancelled"] as const) {
     const p = plan({ status, scheduled_for: "2026-09-16" });
     assert.equal(canStart(p, NOW), false, `${status} should not be startable`);
+  }
+});
+
+test("an unscheduled idea can be started on the spot", () => {
+  // The database has always allowed this; the interface didn't offer it,
+  // so "we're doing this tonight" meant filling in today's date first.
+  assert.equal(canStartNow(plan({ status: "saved" })), true);
+
+  for (const status of ["planned", "live", "done", "cancelled"] as const) {
+    assert.equal(
+      canStartNow(plan({ status })),
+      false,
+      `${status} has its own path`
+    );
   }
 });
 

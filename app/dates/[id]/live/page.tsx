@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Square, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
+import { getPartner } from "@/lib/couple";
 import {
   elapsedMinutes,
   formatElapsed,
@@ -41,7 +42,7 @@ export default async function LiveDatePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireOnboarded();
+  const session = await requireOnboarded();
   const supabase = await createClient();
 
   const plan = await getPlan(supabase, id);
@@ -52,6 +53,9 @@ export default async function LiveDatePage({
   if (plan.status !== "live") {
     redirect(plan.status === "done" ? `/dates/${id}/wrap` : `/dates/${id}`);
   }
+
+  const partner = await getPartner(supabase, session.userId, session.coupleId);
+  const partnerName = partner?.displayName ?? "Them";
 
   const { data } = await supabase
     .from("date_moments")
@@ -107,7 +111,7 @@ export default async function LiveDatePage({
                   >
                     <span className="text-on-surface-variant">{role.label}</span>
                     <span className="text-on-surface">
-                      {whoLabel(role, "Them")}
+                      {whoLabel(role, partnerName)}
                     </span>
                   </li>
                 ))}

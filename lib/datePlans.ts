@@ -150,6 +150,18 @@ export function canStart(plan: DatePlan, now: Date = new Date()): boolean {
   return days !== null && days <= 0;
 }
 
+/**
+ * Whether a date can be started without scheduling it first.
+ *
+ * `start_date` in migration 0013 accepts an unscheduled plan and dates it
+ * today, on the grounds that a spontaneous evening should not require
+ * paperwork. That was true in the database and false in the interface for a
+ * while — the button simply was not offered.
+ */
+export function canStartNow(plan: DatePlan): boolean {
+  return plan.status === "saved";
+}
+
 /** How long it's been running. */
 export function elapsedMinutes(
   plan: DatePlan,

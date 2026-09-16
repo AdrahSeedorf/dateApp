@@ -16,6 +16,7 @@ import { requireOnboarded } from "@/lib/auth";
 import { getPartner } from "@/lib/couple";
 import {
   canStart,
+  canStartNow,
   daysUntil,
   describeCountdown,
   formatTime,
@@ -211,6 +212,26 @@ export default async function DatePlanPage({ params, searchParams }: Props) {
           <p className="text-body-sm text-on-surface-variant">
             Called off — {plan.cancel_reason}
           </p>
+        </Card>
+      )}
+
+      {/* Spontaneity needs a door. Without this, "we're doing this tonight"
+          means filling in a date picker for today first. */}
+      {canStartNow(plan) && (
+        <Card elevation="flat" className="mb-space-lg p-space-lg">
+          <div className="flex flex-wrap items-center justify-between gap-space-md">
+            <p className="text-body-md text-on-surface-variant">
+              Doing this right now?
+            </p>
+
+            <form action={startDate}>
+              <input type="hidden" name="id" value={plan.id} />
+              <Button type="submit" size="sm" variant="secondary">
+                <Play className="h-4 w-4" aria-hidden />
+                Start it now
+              </Button>
+            </form>
+          </div>
         </Card>
       )}
 
