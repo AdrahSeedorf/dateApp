@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { NUDGE_KINDS, nudgeMeta, type Nudge } from "@/lib/nudges";
 import {
   dismissNudge,
@@ -8,6 +8,7 @@ import {
   type NudgeState,
 } from "@/app/home/nudge-actions";
 import { Button, Card, cn } from "@/components/ui";
+import NudgeBurst from "./NudgeBurst";
 
 type Props = {
   partnerName: string;
@@ -41,17 +42,42 @@ export default function NudgeCard({
   const waiting = latest && latest.to_id === viewerId;
   const meta = latest ? nudgeMeta(latest.kind) : null;
 
+  /**
+   * The burst plays when a nudge *arrives*, not when one is on screen.
+   *
+   * The distinction matters because this card re-renders on every dashboard
+   * load and after every server action. Bursting on render would mean
+   * celebrating a three-day-old nudge every time you open the app.
+   */
+  const latestId = latest?.id ?? null;
+  const seen = useRef<string | null | undefined>(undefined);
+  const [burst, setBurst] = useState<string | null>(null);
+
+  useEffect(() => {
+    // The first pass only establishes a baseline: whatever was already
+    // there when the page loaded is not news.
+    if (seen.current === undefined) {
+      seen.current = latestId;
+      return;
+    }
+
+    if (!latestId || latestId === seen.current) return;
+
+    seen.current = latestId;
+    setBurst(latestId);
+
+    // Cleared once it's done so nothing invisible is left in the tree.
+    const timer = setTimeout(() => setBurst(null), 700);
+    return () => clearTimeout(timer);
+  }, [latestId]);
+
   return (
     <Card
       elevation={waiting ? "raised" : "flat"}
       className={cn("mb-space-lg p-space-lg", waiting && "border-primary/40")}
     >
       <div className="flex items-center gap-space-md">
-        {meta && (
-          <span aria-hidden className="text-3xl leading-none">
-            {meta.emoji}
-          </span>
-        )}
+        {meta && <NudgeBurst trigger={burst} emoji={meta.emoji} />}
 
         <div className="min-w-0 flex-1">
           {waiting && meta ? (

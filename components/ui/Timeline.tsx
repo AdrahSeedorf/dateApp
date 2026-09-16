@@ -64,39 +64,3 @@ export function TimelineItem({ children, tone = "primary", className }: ItemProp
     </li>
   );
 }
-
-type ProgressProps = {
-  /** 0–1. Clamped, so a bad computation can't overflow the rail. */
-  value: number;
-  label: string;
-  className?: string;
-};
-
-/**
- * Slim gradient progress rail — anniversary countdowns, onboarding steps.
- *
- * Exposed as a real progressbar so the value is announced rather than only
- * drawn; the visible label is what gets read out.
- */
-export function ProgressRail({ value, label, className }: ProgressProps) {
-  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
-
-  return (
-    <div
-      role="progressbar"
-      aria-valuenow={pct}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label}
-      className={cn(
-        "h-1 w-full rounded-full bg-[var(--glass-rim)] overflow-hidden",
-        className
-      )}
-    >
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-[width] duration-500"
-        style={{ width: `${pct}%` }}
-      />
-    </div>
-  );
-}

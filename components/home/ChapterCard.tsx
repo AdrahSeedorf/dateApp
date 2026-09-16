@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { anniversary, formatCount } from "@/lib/anniversary";
-import { Card, Pill, ProgressRail } from "@/components/ui";
+import { Card, CountUp, Pill, ProgressRail } from "@/components/ui";
 
 type Props = {
   startedAt: string | null;
@@ -45,8 +45,10 @@ export default function ChapterCard({ startedAt, coupleName }: Props) {
         <Pill tone="tertiary">Year {a.currentYear}</Pill>
       </div>
 
+      {/* Ticks up on the first open of a day the number has changed, and
+          sits still every other time. `lib/countUp.ts` has the reasoning. */}
       <p className="font-headline text-display-lg-mobile text-on-surface">
-        {formatCount(a.daysTogether)}{" "}
+        <CountUp value={a.daysTogether} storageKey="days-together" />{" "}
         <span className="text-headline-sm text-primary">
           {a.daysTogether === 1 ? "day" : "days"}
         </span>

@@ -197,6 +197,8 @@ Working:
 - Nudges, long-distance mode, four themes
 - Attribution: who saved an idea, who scheduled it, who called it off, who
   caught each photo — shown only where the answer isn't obviously you
+- Motion on the four moments that carry meaning: the days counter ticking
+  over, a letter's seal breaking, a nudge landing, the year filling up
 
 Deferred, and why — the full triage is in `docs/vision.md`:
 
