@@ -132,8 +132,18 @@ export function daysUntilUnlock(
  * Never mentions the body. The copy is the one place it would be easy to
  * accidentally leak something, so the only inputs here are the title, the
  * author's own teaser, and the clock.
+ *
+ * `now` is a parameter for the same reason it is on every other function in
+ * this file: without it this read the real clock, so its tests only passed
+ * on the day they were written. One of them broke overnight when the date
+ * rolled over — an hour of confusion waiting to happen on any day the suite
+ * is run.
  */
-export function sealedSummary(letter: Letter, viewerIsAuthor: boolean): string {
+export function sealedSummary(
+  letter: Letter,
+  viewerIsAuthor: boolean,
+  now: Date = new Date()
+): string {
   if (letter.status === "draft") return "Not sent yet";
 
   if (letter.status === "opened") {
@@ -146,7 +156,7 @@ export function sealedSummary(letter: Letter, viewerIsAuthor: boolean): string {
       : "Yours whenever you need it";
   }
 
-  const days = daysUntilUnlock(letter);
+  const days = daysUntilUnlock(letter, now);
 
   if (days === null) return "Sealed";
   if (days === 0) return "Ready to open";

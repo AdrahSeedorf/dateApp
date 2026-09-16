@@ -769,3 +769,81 @@ ring. That screen decides whether anyone stays, and it has to be designed
 deliberately rather than falling out as a degraded version of the full one.
 The founding-memory question in couple setup exists partly to make sure the
 vault is never empty on first view.
+
+---
+
+## Artistic direction (agreed 2026-09-16)
+
+### The container is cinematic. The contents are archival.
+
+The app is a room: dark glass, ambient glow, the calm of an evening. The
+things inside it are paper — letters on stock with wax, memories with film
+edges, milestones stamped like postmarks. A glass case holding paper objects.
+
+Every visual decision resolves to one question: **is this chrome or content?**
+
+| | Chrome | Content |
+|---|---|---|
+| Surfaces | Frosted glass, blur, rim light | Paper grain, deckled edge, letterpress |
+| Colour | Theme tokens, glow | Ink, wax, film — closer to fixed |
+| Motion | Light: fades, soft rises | Paper: settles, never bounces |
+| Type | Plus Jakarta Sans | Playfair Display |
+
+The typography split already worked this way before anyone named it. Playfair
+is a printing typeface and Jakarta is an interface one; they have been doing
+chrome-and-content since the tokens were ported.
+
+### What this rules out
+
+**Stock photography of couples.** The most important images in this app are
+the couple's own. Stitch's mockups look good partly because they are full of
+beautiful AI stock, but every one of those is a placeholder standing in for a
+real photo. Shipping them means showing strangers to two people who came here
+to look at themselves — and it is the single most common way apps in this
+space look cheap.
+
+**Fixed-colour artwork for anything structural.** The four Sanctuary Glow
+themes mean a JPEG cannot be chrome. Icons, seals, textures and empty-state
+art are built in SVG and CSS so they follow the palette. The wax colours are
+the deliberate exception, and the reason is written where they are defined.
+
+**Emoji as iconography.** Eleven places currently use emoji for relationship
+stages, nudge kinds and milestones. They render differently on every
+platform, cannot take a theme colour, and read as unfinished. They get
+replaced with a small custom set.
+
+### Motion
+
+`framer-motion` has been a dependency since the project started and is
+entirely unused. This is the largest gap in how finished the app feels, and
+it costs no assets and no licensing.
+
+Principles:
+
+- **Restrained.** This is used in bed at eleven at night. Ease-out, 300–500ms,
+  no spring overshoot, nothing that draws attention to itself.
+- **Motion carries meaning or it does not happen.** A letter unsealing earns
+  animation because the ceremony is the feature. A settings form does not.
+- **`prefers-reduced-motion` is already honoured globally** in `globals.css`.
+  Every animation must degrade to an instant state change, not a slow one.
+
+Worth animating, in order:
+
+1. Page transitions — fade with a small rise
+2. The days-together counter — counts up on load; it is the most emotional
+   number in the app and it currently just appears
+3. Unsealing a letter — the one genuinely ceremonial moment
+4. Dashboard cards entering in sequence
+5. Sending a nudge — the particle burst `DESIGN.md` describes
+6. The progress rail filling rather than arriving full
+
+### Where imagery earns its place, in order
+
+1. **Empty states.** Day one is the barest the app ever looks and the screen
+   that decides whether anyone returns.
+2. **The wax seal.** Currently a flat circle with a padlock. It is the most
+   ownable image in the app and should look like wax.
+3. **App identity.** No favicon, no share preview. A letter link currently
+   previews as nothing at all.
+4. **Nudge and stage icons**, replacing the emoji.
+5. **Paper texture** at very low opacity behind content cards.

@@ -13,3 +13,5 @@ export { Field, TextArea } from "./Field";
 export { default as Screen, ScreenHeader, Section } from "./Screen";
 export { Timeline, TimelineItem, ProgressRail } from "./Timeline";
 export { default as BottomNav } from "./BottomNav";
+export { default as Appear, AppearList, AppearItem } from "./Appear";
+export { DURATION, EASE, chrome, content, fade, stagger, variantsFor } from "./motion";

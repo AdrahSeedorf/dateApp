@@ -33,6 +33,9 @@ import FirstSteps, { type Step } from "@/components/home/FirstSteps";
 import NudgeCard from "@/components/home/NudgeCard";
 import DistanceCard from "@/components/home/DistanceCard";
 import {
+  Appear,
+  AppearItem,
+  AppearList,
   Card,
   Pill,
   Screen,
@@ -211,33 +214,35 @@ export default async function HomePage() {
 
   return (
     <Screen withNav className="mx-auto max-w-2xl">
-      <header className="mt-space-lg mb-space-lg flex items-start justify-between gap-space-md">
-        <div className="min-w-0">
-          <p className="text-label-sm text-primary tracking-[0.3em]">
-            OUR JOURNEY
-          </p>
-          <h1 className="mt-space-xs font-headline text-headline-lg text-on-surface text-balance">
-            {greeting()}
-            {session.displayName ? (
-              <>
-                , <em>{session.displayName}</em>
-              </>
-            ) : null}
-          </h1>
-          {partner?.displayName && (
-            <p className="mt-space-xs text-body-sm text-on-surface-variant">
-              Shared with {partner.displayName}
+      <Appear as="chrome">
+        <header className="mt-space-lg mb-space-lg flex items-start justify-between gap-space-md">
+          <div className="min-w-0">
+            <p className="text-label-sm text-primary tracking-[0.3em]">
+              OUR JOURNEY
             </p>
-          )}
-        </div>
+            <h1 className="mt-space-xs font-headline text-headline-lg text-on-surface text-balance">
+              {greeting()}
+              {session.displayName ? (
+                <>
+                  , <em>{session.displayName}</em>
+                </>
+              ) : null}
+            </h1>
+            {partner?.displayName && (
+              <p className="mt-space-xs text-body-sm text-on-surface-variant">
+                Shared with {partner.displayName}
+              </p>
+            )}
+          </div>
 
-        <Link
-          href="/profile"
-          className="shrink-0 text-body-sm text-on-surface-variant transition hover:text-on-surface"
-        >
-          Profile
-        </Link>
-      </header>
+          <Link
+            href="/profile"
+            className="shrink-0 text-body-sm text-on-surface-variant transition hover:text-on-surface"
+          >
+            Profile
+          </Link>
+        </header>
+      </Appear>
 
       <FirstSteps steps={steps} />
 
@@ -337,27 +342,28 @@ export default async function HomePage() {
       )}
 
       <Section title="Journey spaces">
-        <div className="grid grid-cols-2 gap-space-sm">
+        <AppearList className="grid grid-cols-2 gap-space-sm">
           {spaces.map((space) => (
-            <Card
-              key={space.href}
-              as={Link}
-              href={space.href}
-              elevation="flat"
-              interactive
-              className="block p-space-lg transition hover:border-primary/50"
-            >
-              <space.icon
-                className="mb-space-sm h-6 w-6 text-primary"
-                aria-hidden
-              />
-              <p className="text-title-md text-on-surface">{space.title}</p>
-              <p className="mt-0.5 text-body-sm text-on-surface-variant">
-                {space.detail}
-              </p>
-            </Card>
+            <AppearItem key={space.href}>
+              <Card
+                as={Link}
+                href={space.href}
+                elevation="flat"
+                interactive
+                className="block h-full p-space-lg transition hover:border-primary/50"
+              >
+                <space.icon
+                  className="mb-space-sm h-6 w-6 text-primary"
+                  aria-hidden
+                />
+                <p className="text-title-md text-on-surface">{space.title}</p>
+                <p className="mt-0.5 text-body-sm text-on-surface-variant">
+                  {space.detail}
+                </p>
+              </Card>
+            </AppearItem>
           ))}
-        </div>
+        </AppearList>
       </Section>
 
       {memories.length > 0 && (

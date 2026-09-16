@@ -102,7 +102,7 @@ test("the sealed summary never reveals anything about the contents", () => {
   const l = letter({ teaser: null });
 
   for (const viewerIsAuthor of [true, false]) {
-    const summary = sealedSummary(l, viewerIsAuthor);
+    const summary = sealedSummary(l, viewerIsAuthor, NOW);
     assert.equal(
       summary.includes(body),
       false,
@@ -113,20 +113,20 @@ test("the sealed summary never reveals anything about the contents", () => {
 
 test("summaries read correctly from each side", () => {
   const dated = letter({ unlock_at: "2026-09-16T06:00:00Z" });
-  assert.equal(sealedSummary(dated, false), "1 day left");
+  assert.equal(sealedSummary(dated, false, NOW), "1 day left");
 
   const due = letter({ unlock_at: "2026-09-14T00:00:00Z" });
-  assert.equal(sealedSummary(due, false), "Ready to open");
+  assert.equal(sealedSummary(due, false, NOW), "Ready to open");
 
   const anytime = letter({ unlock_trigger: "on_request", unlock_at: null });
-  assert.equal(sealedSummary(anytime, false), "Yours whenever you need it");
-  assert.equal(sealedSummary(anytime, true), "Waiting for them to need it");
+  assert.equal(sealedSummary(anytime, false, NOW), "Yours whenever you need it");
+  assert.equal(sealedSummary(anytime, true, NOW), "Waiting for them to need it");
 
   const opened = letter({ status: "opened", opened_at: "2026-09-02" });
-  assert.equal(sealedSummary(opened, true), "They've read this");
-  assert.equal(sealedSummary(opened, false), "You've opened this");
+  assert.equal(sealedSummary(opened, true, NOW), "They've read this");
+  assert.equal(sealedSummary(opened, false, NOW), "You've opened this");
 
-  assert.equal(sealedSummary(letter({ status: "draft" }), true), "Not sent yet");
+  assert.equal(sealedSummary(letter({ status: "draft" }), true, NOW), "Not sent yet");
 });
 
 test("the earliest unlock date is tomorrow, not today", () => {
