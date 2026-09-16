@@ -1,20 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookHeart, MapPin } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/server";
 import { requireOnboarded } from "@/lib/auth";
 import DateGenerator from "@/components/DateGenerator";
-import { Card, Screen, ScreenHeader, Section } from "@/components/ui";
-
-type SavedPlan = {
-  id: string;
-  title: string;
-  activity: string | null;
-  location_type: string | null;
-  budget_estimate: string | null;
-  status: string;
-  created_at: string;
-};
+import { listPlans } from "@/lib/datePlans";
+import PlanCard from "@/components/dates/PlanCard";
+import { Screen, ScreenHeader, Section } from "@/components/ui";
 
 export default async function DatesPage() {
   const session = await requireOnboarded();
@@ -22,16 +14,22 @@ export default async function DatesPage() {
 
   if (!session.coupleId) redirect("/home");
 
-  const { data: plans, error } = await supabase
-    .from("date_plans")
-    .select("id, title, activity, location_type, budget_estimate, status, created_at")
-    .order("created_at", { ascending: false });
+  const { plans, error } = await listPlans(supabase);
 
-  if (error) {
-    console.error("[dates] plans query failed", error.message);
-  }
-
-  const savedPlans = (plans ?? []) as SavedPlan[];
+  // Grouped by where each one is in its life, because that is what decides
+  // what you can do with it. A flat list of "saved ideas" was fine when
+  // nothing ever happened to them.
+  const live = plans.filter((p) => p.status === "live");
+  const upcoming = plans
+    .filter((p) => p.status === "planned")
+    .sort((a, b) => (a.scheduled_for ?? "").localeCompare(b.scheduled_for ?? ""));
+  const needsWritingUp = plans.filter(
+    (p) => p.status === "done" && !p.memory_id
+  );
+  const ideas = plans.filter((p) => p.status === "saved");
+  const past = plans.filter(
+    (p) => (p.status === "done" && p.memory_id) || p.status === "cancelled"
+  );
 
   return (
     <Screen withNav className="mx-auto max-w-3xl">
@@ -50,55 +48,69 @@ export default async function DatesPage() {
 
       <DateGenerator coupleId={session.coupleId} />
 
-      {savedPlans.length > 0 && (
-        <Section
-          title={`Saved ideas (${savedPlans.length})`}
-          className="mt-space-xl"
-        >
-          <div className="space-y-space-md">
-            {savedPlans.map((plan) => (
-              <Card key={plan.id} elevation="flat" className="p-space-lg">
-                <div className="mb-space-sm flex items-start justify-between gap-space-md">
-                  <div className="min-w-0">
-                    <p className="mb-1 text-title-md text-on-surface">
-                      {plan.title}
-                    </p>
+      {error && (
+        <p role="alert" className="mt-space-lg text-body-sm text-error">
+          {error}
+        </p>
+      )}
 
-                    {plan.location_type && (
-                      <p className="flex items-center gap-1.5 text-body-sm text-on-surface-variant">
-                        <MapPin className="h-3 w-3 shrink-0" aria-hidden />
-                        <span className="line-clamp-1">
-                          {plan.location_type}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-
-                  {plan.budget_estimate && (
-                    <p className="shrink-0 text-label-sm text-on-surface-variant">
-                      {plan.budget_estimate}
-                    </p>
-                  )}
-                </div>
-
-                {plan.activity && (
-                  <p className="mb-space-md text-body-md text-on-surface-variant leading-relaxed">
-                    {plan.activity}
-                  </p>
-                )}
-
-                <Link
-                  href={`/memories/new?plan=${plan.id}`}
-                  className="inline-flex items-center gap-2 text-body-sm text-primary transition hover:text-primary-container"
-                >
-                  <BookHeart className="h-4 w-4" aria-hidden />
-                  We did this — save the memory
-                </Link>
-              </Card>
+      {live.length > 0 && (
+        <Section title="Happening now" className="mt-space-xl">
+          <div className="space-y-space-sm">
+            {live.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
             ))}
           </div>
         </Section>
       )}
+
+      {needsWritingUp.length > 0 && (
+        <Section title="Waiting to be written up" className="mt-space-xl">
+          <div className="space-y-space-sm">
+            {needsWritingUp.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {upcoming.length > 0 && (
+        <Section title="In the diary" className="mt-space-xl">
+          <div className="space-y-space-sm">
+            {upcoming.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {ideas.length > 0 && (
+        <Section
+          title={`Ideas (${ideas.length})`}
+          className="mt-space-xl"
+        >
+          <p className="mb-space-md text-body-sm text-on-surface-variant">
+            Saved but not in the diary. Open one to give it a day.
+          </p>
+
+          <div className="space-y-space-sm">
+            {ideas.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {past.length > 0 && (
+        <Section title="Been and gone" className="mt-space-xl">
+          <div className="space-y-space-sm">
+            {past.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
+            ))}
+          </div>
+        </Section>
+      )}
+
     </Screen>
   );
 }

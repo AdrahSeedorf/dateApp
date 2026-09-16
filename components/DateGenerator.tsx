@@ -8,6 +8,7 @@ import DateOptionCard, {
   AccessWarning,
   GeneratedCaveat,
 } from "@/components/dates/DateOptionCard";
+import { CalendarPlus } from "lucide-react";
 import { Button, Card, Field, TextArea } from "@/components/ui";
 import {
   BUDGETS,
@@ -44,7 +45,9 @@ export default function DateGenerator({ coupleId }: Props) {
 
   const [options, setOptions] = useState<DateIdea[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [savedIndexes, setSavedIndexes] = useState<boolean[]>([]);
+  // The saved row's id per option, so "Saved ✓" can become "Plan it".
+  // A dead end here was the whole reason ideas never turned into dates.
+  const [savedIds, setSavedIds] = useState<(string | null)[]>([]);
   const [accessWarning, setAccessWarning] = useState(false);
 
   // Restoring the last-used location has to happen after mount: localStorage
@@ -65,7 +68,7 @@ export default function DateGenerator({ coupleId }: Props) {
     if (!canGenerate) return;
 
     setPhase("loading");
-    setSavedIndexes([]);
+    setSavedIds([]);
     localStorage.setItem(LOCATION_KEY, location.trim());
 
     const result = await generateDateIdeas({
@@ -86,7 +89,7 @@ export default function DateGenerator({ coupleId }: Props) {
     }
 
     setOptions(result.options);
-    setSavedIndexes(new Array(result.options.length).fill(false));
+    setSavedIds(new Array(result.options.length).fill(null));
     setAccessWarning(result.accessWarning);
     setPhase("result");
   }
@@ -95,25 +98,29 @@ export default function DateGenerator({ coupleId }: Props) {
     const option = options[index];
     if (!option) return;
 
-    const { error } = await supabase.from("date_plans").insert({
-      couple_id: coupleId,
-      title: option.title,
-      activity: option.activity,
-      location_type: option.locationType,
-      budget_estimate: option.budgetEstimate,
-      outfit_note: option.outfitNote,
-      vibe_note: option.vibeNote,
-    });
+    const { data, error } = await supabase
+      .from("date_plans")
+      .insert({
+        couple_id: coupleId,
+        title: option.title,
+        activity: option.activity,
+        location_type: option.locationType,
+        budget_estimate: option.budgetEstimate,
+        outfit_note: option.outfitNote,
+        vibe_note: option.vibeNote,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      console.error("[dates] save failed", error.message);
-      setErrorMessage(`Couldn't save that: ${error.message}`);
+    if (error || !data) {
+      console.error("[dates] save failed", error?.message);
+      setErrorMessage(`Couldn't save that: ${error?.message ?? "try again"}`);
       return;
     }
 
-    setSavedIndexes((prev) => {
+    setSavedIds((prev) => {
       const next = [...prev];
-      next[index] = true;
+      next[index] = data.id;
       return next;
     });
 
@@ -218,15 +225,29 @@ export default function DateGenerator({ coupleId }: Props) {
                 option={option}
                 index={index}
                 action={
-                  <Button
-                    fullWidth
-                    size="sm"
-                    variant={savedIndexes[index] ? "secondary" : "primary"}
-                    onClick={() => savePlan(index)}
-                    disabled={savedIndexes[index]}
-                  >
-                    {savedIndexes[index] ? "Saved ✓" : "Save this one"}
-                  </Button>
+                  savedIds[index] ? (
+                    <div className="space-y-space-sm">
+                      <Button
+                        href={`/dates/${savedIds[index]}`}
+                        fullWidth
+                        size="sm"
+                      >
+                        <CalendarPlus className="h-4 w-4" aria-hidden />
+                        Put it in the diary
+                      </Button>
+                      <p className="text-center text-body-sm text-on-surface-variant">
+                        Saved. Give it a day and it&apos;ll count down.
+                      </p>
+                    </div>
+                  ) : (
+                    <Button
+                      fullWidth
+                      size="sm"
+                      onClick={() => savePlan(index)}
+                    >
+                      Save this one
+                    </Button>
+                  )
                 }
               />
             ))}

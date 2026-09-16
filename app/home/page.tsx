@@ -18,6 +18,13 @@ import {
   listMilestones,
 } from "@/lib/milestones";
 import { coverPathFor, signPaths, type Memory } from "@/lib/memories";
+import {
+  awaitingMemory,
+  elapsedMinutes,
+  formatElapsed,
+  highlightPlan,
+  listPlans,
+} from "@/lib/datePlans";
 import { latestNudge, timeAgo } from "@/lib/nudges";
 import {
   dayDifference,
@@ -32,6 +39,7 @@ import ChapterCard from "@/components/home/ChapterCard";
 import FirstSteps, { type Step } from "@/components/home/FirstSteps";
 import NudgeCard from "@/components/home/NudgeCard";
 import DistanceCard from "@/components/home/DistanceCard";
+import NextDateCard from "@/components/home/NextDateCard";
 import {
   Appear,
   AppearItem,
@@ -78,6 +86,14 @@ export default async function HomePage() {
     ]);
 
   const nudge = await latestNudge(supabase);
+
+  // The date that deserves the home screen: one that's running, then one
+  // that's finished and unwritten, then the next one coming up.
+  const { plans } = await listPlans(supabase);
+  const unwritten = plans.find(awaitingMemory) ?? null;
+  const nextDate = plans.find((p) => p.status === "live")
+    ?? unwritten
+    ?? highlightPlan(plans);
 
   const apart = isApart(couple?.distance_mode);
 
@@ -178,10 +194,12 @@ export default async function HomePage() {
       href: "/dates",
       icon: Sparkles,
       title: "Date planner",
-      detail:
-        (planCount ?? 0) > 0
-          ? `${planCount} saved`
-          : "Two real ideas for tonight",
+      detail: (() => {
+        const upcoming = plans.filter((p) => p.status === "planned").length;
+        if (upcoming > 0) return `${upcoming} in the diary`;
+        if ((planCount ?? 0) > 0) return `${planCount} saved`;
+        return "Two real ideas for tonight";
+      })(),
     },
     {
       href: "/memories",
@@ -286,6 +304,16 @@ export default async function HomePage() {
           viewerId={session.userId}
           // Formatted here so the component doesn't read the clock mid-render.
           agoLabel={nudge ? timeAgo(nudge.created_at) : null}
+        />
+      )}
+
+      {/* The date outranks everything except a letter that's ready: it is
+          either happening now, about to, or owed a write-up. */}
+      {nextDate && partner && (
+        <NextDateCard
+          plan={nextDate}
+          partnerName={partner.displayName ?? "Them"}
+          elapsed={formatElapsed(elapsedMinutes(nextDate))}
         />
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { NUDGE_KINDS, nudgeMeta, timeAgo, type Nudge } from "@/lib/nudges";
+import { NUDGE_KINDS, nudgeMeta, type Nudge } from "@/lib/nudges";
 import {
   dismissNudge,
   sendNudge,

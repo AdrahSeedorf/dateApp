@@ -44,6 +44,7 @@ tables and functions created by earlier ones.
 | 0010 | `0010_long_distance.sql` | long-distance mode, reunion date, per-person timezone |
 | 0011 | `0011_fix_cover_relationship.sql` | moves the cover flag onto the media row, removing a circular foreign key that broke every `memory_media` embed |
 | 0012 | `0012_memory_deletion.sql` | recoverable deletion (30 days), a purge, and the missing update policy on `memory_media` |
+| 0013 | `0013_date_lifecycle.sql` | the date lifecycle — scheduling, start/end, cancellation, and the moments captured while a date runs |
 
 0002 onwards are written to be safe to re-run, so there's no harm in pasting
 one twice if you lose track. **0001 is not** — it creates tables outright and
@@ -57,8 +58,8 @@ everything is applied by hand — so two files exist to sort it out:
 
 | File | What it does |
 | --- | --- |
-| `supabase/catchup/check-schema.sql` | Prints which of 0001–0012 are applied and which are missing |
-| `supabase/catchup/0002-0012_catchup.sql` | All of 0002–0012 concatenated; safe to run whatever state you're in |
+| `supabase/catchup/check-schema.sql` | Prints which of 0001–0013 are applied and which are missing |
+| `supabase/catchup/0002-0013_catchup.sql` | All of 0002–0013 concatenated; safe to run whatever state you're in |
 
 Run the check first. If anything from 0002 on is missing, paste the catch-up
 file and run it once — every statement in it is guarded, so the ones already
@@ -181,12 +182,13 @@ segment is what the storage policies check.
 
 Working:
 
-- Schema, RLS and storage across ten migrations
+- Schema, RLS and storage across thirteen migrations
 - Magic-link sign-in and invite redemption (the V1 → V2 handoff)
 - Onboarding: seven steps, path-aware for the invited partner
 - Preferences, access needs, and a profile that can edit all of it
-- Date generation shaped by preferences, access needs, relationship chapter,
-  and per-request controls
+- The full date lifecycle: generate, plan with roles, count down, reschedule
+  or cancel, start, capture photos and notes as it happens, end, and turn the
+  evening into a memory that is already written
 - Memory vault with categories, favourites, media and reflections
 - Time-capsule letters with a lock enforced in the database
 - Timeline of milestones, past and future

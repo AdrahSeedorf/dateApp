@@ -46,6 +46,10 @@ from (
               where table_name = 'memories' and column_name = 'deleted_at')
       and exists (select 1 from pg_policies
               where tablename = 'memory_media'
-                and policyname = 'update couple media'))
+                and policyname = 'update couple media')),
+    ('0013', 'date lifecycle + moments',
+      to_regclass('public.date_moments') is not null
+      and exists (select 1 from information_schema.columns
+              where table_name = 'date_plans' and column_name = 'started_at'))
 ) as m(n, what, present)
 order by m.n;
